@@ -1,0 +1,9 @@
+<launch>
+    <arg name="data_dir" default="/home/xiaoli/Dropbox/primp_exp/imagination" />
+    <arg name="demo_type" default="pouring"/>
+    <arg name="object" default="red_laddle"/>
+
+    <node name="panda_grasp_handle_server" pkg="$(find panda_moveit_control)" type="panda_grasp_handle_server.cpp" respawn="false" output="screen" >
+        <param name="scene_mesh_path" value="$(arg data_dir)/$(arg demo_type)/$(arg object)/perception_0/mesh_scene.obj" type="string"/>
+    </node>
+</launch>

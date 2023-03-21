@@ -29,6 +29,8 @@
 #include <moveit_msgs/DisplayTrajectory.h>
 #include <moveit_msgs/PlanningScene.h>
 
+#include <geometric_shapes/shape_operations.h>
+
 #define PI 3.1415926
 typedef Eigen::Transform<double, 3, Eigen::Affine> T;
 
@@ -77,6 +79,9 @@ class PandaGraspHandleServer
             sleep_t.sleep();
             ROS_INFO("Wait for planning scene subscriber...");
         }
+
+        n.getParam("scene_mesh_path", mesh_path_);
+        AddCollisionSceneMesh(mesh_path_);
 
         
     }
@@ -941,6 +946,34 @@ class PandaGraspHandleServer
         ROS_INFO("Remove collision drawer...");
     }
 
+    void AddCollisionSceneMesh(std::string mesh_path)
+    {
+        moveit_msgs::CollisionObject collision_scene;
+        collision_scene.header.frame_id = "world";
+        collision_scene.header.stamp = ros::Time::now();
+        collision_scene.id = "collision_scene";
+        
+        // Add scene mesh
+        collision_scene.meshes.resize(1);
+        collision_scene.mesh_poses.resize(1);
+        collision_scene.operation = moveit_msgs::CollisionObject::ADD;
+
+        shapes::Mesh* scene_mesh = shapes::createMeshFromResource(mesh_path);
+        shapes::ShapeMsg scene_mesh_msg;
+        shapes::constructMsgFromShape(scene_mesh, scene_mesh_msg);
+
+        shape_msgs::Mesh scene_mesh_moveit = boost::get<shape_msgs::Mesh>(scene_mesh_msg);
+        collision_scene.meshes[0].triangles = scene_mesh_moveit.triangles;
+        collision_scene.meshes[0].vertices = scene_mesh_moveit.vertices;
+
+        moveit_msgs::PlanningScene planning_scene;
+        planning_scene.world.collision_objects.push_back(collision_scene);
+        planning_scene.is_diff = true;
+        planning_scene_diff_publisher_.publish(planning_scene);
+
+        ROS_INFO("Publish scene collision to planning scene");
+    }
+
     protected:
     ros::NodeHandle& n;
     ros::ServiceServer ss_grasp_handle_;
@@ -982,6 +1015,8 @@ class PandaGraspHandleServer
     ros::Subscriber sub_aruco_marker_;
     ros::Subscriber sub_obstacle_marker_;
     ros::Publisher  planning_scene_diff_publisher_;
+
+    std::string mesh_path_;
 
 };
 

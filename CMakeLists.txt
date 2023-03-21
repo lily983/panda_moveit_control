@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
   actionlib
   franka_gripper
+  geometric_shapes
 )
 
 ## System dependencies are found with CMake's conventions
