@@ -62,7 +62,7 @@ class PandaGraspHandleServer
         }
         ROS_INFO("Ready to send move/homing action to gripper...");
 
-        sub_trajectory_ = n.subscribe("/test_stomp_planning/display_planned_path", 1, &PandaGraspHandleServer::callBackTrajectory, this);
+        sub_trajectory_ = n.subscribe("/server_stomp_planning/display_planned_path", 1, &PandaGraspHandleServer::callBackTrajectory, this);
 
         sub_aruco_marker_ = n.subscribe("/aruco_double/pose2", 1, &PandaGraspHandleServer::callBackAruco, this);
 
@@ -275,6 +275,126 @@ class PandaGraspHandleServer
         ROS_INFO("Received the grasping service call...");
 
 
+        // trajectory_msgs::JointTrajectoryPoint stomp_start_point;
+        // stomp_start_point = stomp_trajectory_.joint_trajectory.points.at(0);
+
+        // moveit::planning_interface::MoveGroupInterface::Plan  my_plan;
+        // const robot_state::JointModelGroup* joint_model_group =
+        //     move_group_.getCurrentState()->getJointModelGroup("panda_arm");
+
+        // if(stomp_trajectory_.joint_trajectory.points.size() == 0){
+        //     ROS_ERROR("Haven't received STOMP trajectroy ");
+        //     res.success = false;
+        //     return 0;
+        // }
+
+        // // set robot state to the first stomp joint trajectory point 
+        // moveit::core::RobotStatePtr start_state = move_group_.getCurrentState();
+
+        // moveit::core::RobotStatePtr stomp_start_state = move_group_.getCurrentState();
+        
+        // std::vector<double> joint_group_positions;
+        // joint_group_positions = stomp_start_point.positions;
+
+        // stomp_start_state->setJointGroupPositions(joint_model_group, joint_group_positions);
+
+        // move_group_.setStartState(*stomp_start_state);
+        // ROS_INFO("Reverse planning, set start state to the first stomp joint trajectory point ");
+
+        // std::vector<double> pre_grasp_pose_joint_values;
+        
+
+        // // set pose target to pre-grasp pose
+        // move_group_.setPoseTarget(pre_grasp_pose_);
+        // if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
+        // {
+        //     pre_grasp_pose_joint_values = my_plan.trajectory_.joint_trajectory.points.at(my_plan.trajectory_.joint_trajectory.points.size() - 1).positions;
+        //     ROS_INFO("Successfully planned reverse planning");
+        //     moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
+        //     moveit_visual_tools_.trigger();
+        //     // move_group_.execute(my_plan.trajectory_);
+        // }
+        // else{
+        //     ROS_ERROR("Failed to plan in a reverse way");
+        //     res.success = 0;
+        //     return 0;
+        // }
+
+        // // Plan from start configuration to the pre_grasp_pose_joint_values
+
+        // move_group_.setStartState(*start_state);
+        // ROS_INFO("Start plan from arm start configuration to pre_grasp_pose_joint_values");
+        // move_group_.setJointValueTarget(pre_grasp_pose_joint_values);
+
+        // addCollisionDrawer();
+        // ros::Duration(1.0).sleep();
+
+        // if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
+        // {
+        //     pre_grasp_trajectory_ = my_plan.trajectory_;
+        //     ROS_INFO("Successfully planned from arm start configuration to pre_grasp_pose_joint_values");
+        //     moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
+        //     moveit_visual_tools_.trigger();
+        //     // move_group_.execute(my_plan.trajectory_);
+        // }
+        // else{
+        //     ROS_ERROR("Failed to plan from arm start configuration to pre_grasp_pose_joint_values");
+        //     res.success = 0;
+        //     return 0;
+        // }
+
+        // moveit::core::RobotStatePtr pre_grasp_finished_state = move_group_.getCurrentState();
+        // pre_grasp_finished_state->setJointGroupPositions(joint_model_group, pre_grasp_pose_joint_values);
+        // move_group_.setStartState(*pre_grasp_finished_state);
+
+        // move_group_.setJointValueTarget(stomp_start_point.positions);
+
+        // removeCollisionDrawer();
+        // ros::Duration(2.0).sleep();
+
+        // if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
+        // {
+        //     pre_grasp_2_grasp_trajectory_ = my_plan.trajectory_;
+        //     moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
+        //     moveit_visual_tools_.trigger();
+        //     // move_group_.execute(my_plan.trajectory_);
+        // }
+        // else{
+        //     ROS_ERROR("Failed to plan from arm start configuration to pre_grasp_pose_joint_values");
+        //     res.success = 0;
+        //     return 0;
+        // }
+        
+    
+        // moveit_visual_tools_.publishTrajectoryLine(pre_grasp_trajectory_, joint_model_group);
+        // moveit_visual_tools_.publishTrajectoryLine(pre_grasp_2_grasp_trajectory_, joint_model_group);
+        // moveit_visual_tools_.publishTrajectoryLine(stomp_trajectory_, joint_model_group);
+        // moveit_visual_tools_.trigger();
+
+
+        // move_group_.setStartState(*start_state);
+        // move_group_.execute(pre_grasp_trajectory_);
+
+        // ros::Duration(1.0).sleep();
+
+        // move_group_.execute(pre_grasp_2_grasp_trajectory_);
+
+        // ros::Duration(0.5).sleep();
+        // franka_gripper::MoveGoal move_goal;
+        // move_goal.width = 0.03;
+        // move_goal.speed = 0.03;
+        // moveAC.sendGoal(move_goal);
+        // if(moveAC.waitForResult(ros::Duration(3.0)))
+        // {
+        //     ROS_INFO("Franka gripper sucessfully complish move action.");
+        // }
+        // else
+        // {
+        //     ROS_ERROR("Franka gripper failed to complish move action.");
+        // }
+
+        // ros::Duration(0.5).sleep();
+
         trajectory_msgs::JointTrajectoryPoint stomp_start_point;
         stomp_start_point = stomp_trajectory_.joint_trajectory.points.at(0);
 
@@ -282,107 +402,22 @@ class PandaGraspHandleServer
         const robot_state::JointModelGroup* joint_model_group =
             move_group_.getCurrentState()->getJointModelGroup("panda_arm");
 
-        if(stomp_trajectory_.joint_trajectory.points.size() == 0){
-            ROS_ERROR("Haven't received STOMP trajectroy ");
-            res.success = false;
-            return 0;
-        }
-
-        // set robot state to the first stomp joint trajectory point 
-        moveit::core::RobotStatePtr start_state = move_group_.getCurrentState();
-
-        moveit::core::RobotStatePtr stomp_start_state = move_group_.getCurrentState();
-        
-        std::vector<double> joint_group_positions;
-        joint_group_positions = stomp_start_point.positions;
-
-        stomp_start_state->setJointGroupPositions(joint_model_group, joint_group_positions);
-
-        move_group_.setStartState(*stomp_start_state);
-        ROS_INFO("Reverse planning, set start state to the first stomp joint trajectory point ");
-
-        std::vector<double> pre_grasp_pose_joint_values;
-        
-
-        // set pose target to pre-grasp pose
-        move_group_.setPoseTarget(pre_grasp_pose_);
-        if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        {
-            pre_grasp_pose_joint_values = my_plan.trajectory_.joint_trajectory.points.at(my_plan.trajectory_.joint_trajectory.points.size() - 1).positions;
-            ROS_INFO("Successfully planned reverse planning");
-            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-            moveit_visual_tools_.trigger();
-            // move_group_.execute(my_plan.trajectory_);
-        }
-        else{
-            ROS_ERROR("Failed to plan in a reverse way");
-            res.success = 0;
-            return 0;
-        }
-
-        // Plan from start configuration to the pre_grasp_pose_joint_values
-
-        move_group_.setStartState(*start_state);
-        ROS_INFO("Start plan from arm start configuration to pre_grasp_pose_joint_values");
-        move_group_.setJointValueTarget(pre_grasp_pose_joint_values);
-
-        addCollisionDrawer();
-        ros::Duration(1.0).sleep();
-
-        if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        {
-            pre_grasp_trajectory_ = my_plan.trajectory_;
-            ROS_INFO("Successfully planned from arm start configuration to pre_grasp_pose_joint_values");
-            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-            moveit_visual_tools_.trigger();
-            // move_group_.execute(my_plan.trajectory_);
-        }
-        else{
-            ROS_ERROR("Failed to plan from arm start configuration to pre_grasp_pose_joint_values");
-            res.success = 0;
-            return 0;
-        }
-
-        moveit::core::RobotStatePtr pre_grasp_finished_state = move_group_.getCurrentState();
-        pre_grasp_finished_state->setJointGroupPositions(joint_model_group, pre_grasp_pose_joint_values);
-        move_group_.setStartState(*pre_grasp_finished_state);
-
         move_group_.setJointValueTarget(stomp_start_point.positions);
-
-        removeCollisionDrawer();
-        ros::Duration(2.0).sleep();
-
         if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
         {
-            pre_grasp_2_grasp_trajectory_ = my_plan.trajectory_;
-            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-            moveit_visual_tools_.trigger();
-            // move_group_.execute(my_plan.trajectory_);
+            move_group_.execute(my_plan.trajectory_);
+            ROS_INFO("Reached start point, hand over cup ...");
         }
         else{
-            ROS_ERROR("Failed to plan from arm start configuration to pre_grasp_pose_joint_values");
+            ROS_ERROR("Failed to plan from arm start configuration to stomp first points");
             res.success = 0;
             return 0;
         }
-        
-    
-        moveit_visual_tools_.publishTrajectoryLine(pre_grasp_trajectory_, joint_model_group);
-        moveit_visual_tools_.publishTrajectoryLine(pre_grasp_2_grasp_trajectory_, joint_model_group);
-        moveit_visual_tools_.publishTrajectoryLine(stomp_trajectory_, joint_model_group);
-        moveit_visual_tools_.trigger();
 
-
-        move_group_.setStartState(*start_state);
-        move_group_.execute(pre_grasp_trajectory_);
-
-        ros::Duration(1.0).sleep();
-
-        move_group_.execute(pre_grasp_2_grasp_trajectory_);
-
-        ros::Duration(0.5).sleep();
+        ros::Duration(10.0).sleep();
         franka_gripper::MoveGoal move_goal;
-        move_goal.width = 0.03;
-        move_goal.speed = 0.03;
+        move_goal.width = 0.05;
+        move_goal.speed = 0.01;
         moveAC.sendGoal(move_goal);
         if(moveAC.waitForResult(ros::Duration(3.0)))
         {
@@ -393,7 +428,7 @@ class PandaGraspHandleServer
             ROS_ERROR("Franka gripper failed to complish move action.");
         }
 
-        ros::Duration(0.5).sleep();
+        ros::Duration(5.0).sleep();
 
         move_group_.execute(stomp_trajectory_);
 
