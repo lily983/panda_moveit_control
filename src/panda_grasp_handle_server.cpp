@@ -80,7 +80,9 @@ class PandaGraspHandleServer
             ROS_INFO("Wait for planning scene subscriber...");
         }
 
-        n.getParam("scene_mesh_path", mesh_path_);
+        n.getParam("/panda_grasp_handle_server/scene_mesh_path", mesh_path_);
+        std::cout << mesh_path_ << "\n";
+
         AddCollisionSceneMesh(mesh_path_);
 
         
@@ -958,7 +960,7 @@ class PandaGraspHandleServer
         collision_scene.mesh_poses.resize(1);
         collision_scene.operation = moveit_msgs::CollisionObject::ADD;
 
-        shapes::Mesh* scene_mesh = shapes::createMeshFromResource(mesh_path);
+        shapes::Mesh* scene_mesh = shapes::createMeshFromResource("package://panda_moveit_control/models/mesh_scene.obj");
         shapes::ShapeMsg scene_mesh_msg;
         shapes::constructMsgFromShape(scene_mesh, scene_mesh_msg);
 

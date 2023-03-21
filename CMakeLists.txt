@@ -27,7 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Assimp REQUIRED all)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -161,6 +161,7 @@ add_dependencies(panda_grasp_handle_server ${franka_gripper_EXPORTED_TARGETS} ${
 ## Specify libraries to link a library or executable target against
 target_link_libraries(panda_grasp_handle_server
   ${catkin_LIBRARIES}
+  ${Assimp_LIBRARIES}
 )
 
 #############
