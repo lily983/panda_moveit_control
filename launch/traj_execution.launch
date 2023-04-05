@@ -1,0 +1,26 @@
+<launch>
+    <arg name="data_dir" default="/home/xiaoli/Dropbox/primp_exp/imagination" />
+    <arg name="motion_primitive" default="pouring"/>
+    <arg name="mode" default="default" />
+    <arg name="object" default="red_laddle"/>
+    <arg name="trail_id" default="default" />
+
+    <group if="$(eval arg('motion_primitive') == 'opening')">
+        <rosparam command="load" file="$(find primp)/config/opening_prior_knowledge.yaml" />
+        <node name="panda_grasp_handle_server" pkg="panda_moveit_control" type="panda_grasp_handle_server" output="screen" >
+            <param name="web_mesh_path" value="$(arg data_dir)/$(arg motion_primitive)/$(arg object)_$(arg trail_id)/perception_0" type="string"/>
+            <param name="repo_mesh_path" value="$(find panda_moveit_control)/models" type="string" />
+            <param name="mode" value="$(arg mode)" type="string" />
+            <param name="object" value="$(arg object)" type="string" />
+        </node>    
+    </group> 
+
+    <group if="$(eval arg('motion_primitive') != 'opening')">
+        <node name="panda_grasp_handle_server" pkg="panda_moveit_control" type="panda_grasp_handle_server" output="screen" >
+            <param name="web_mesh_path" value="$(arg data_dir)/$(arg motion_primitive)/$(arg object)_$(arg trail_id)/perception_0" type="string"/>
+            <param name="repo_mesh_path" value="$(find panda_moveit_control)/models" type="string" />
+        </node>
+    </group>
+
+
+</launch>

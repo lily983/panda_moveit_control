@@ -17,11 +17,13 @@
 #include <tf2/exceptions.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 #include <panda_moveit_control/PandaGraspHandle.h>
 #include <panda_moveit_control/GraspHandleInfo.h>
+#include <panda_moveit_control/DisplayStompTraj.h>
 
 #include <franka_gripper/MoveAction.h>
 #include <franka_gripper/HomingAction.h>
@@ -30,6 +32,10 @@
 #include <moveit_msgs/PlanningScene.h>
 
 #include <geometric_shapes/shape_operations.h>
+
+#include <filesystem>
+
+#include <sound_play/sound_play.h>
 
 #define PI 3.1415926
 typedef Eigen::Transform<double, 3, Eigen::Affine> T;
@@ -52,6 +58,10 @@ class PandaGraspHandleServer
         // std::cout << "2" << "\n";
         ss_grasp_info_ = n.advertiseService("generate_grasp_info", &PandaGraspHandleServer::callBackGenerateGraspInfo, this);
         
+        ss_display_stomp_traj_ = n.advertiseService("display_stomp_traj", &PandaGraspHandleServer::callBackDisplayStompTraj, this);
+
+        display_stomp_traj_publisher_ = n.advertise<moveit_msgs::DisplayTrajectory>("display_traj", 1);
+
         // std::cout << "3" << "\n";
         initializedFixedTransformations();
         ROS_INFO("Finished initialize fixed transformation");
@@ -64,14 +74,23 @@ class PandaGraspHandleServer
         }
         ROS_INFO("Ready to send move/homing action to gripper...");
 
-        sub_trajectory_ = n.subscribe("/server_stomp_planning/display_planned_path", 1, &PandaGraspHandleServer::callBackTrajectory, this);
+        sub_trajectory_ = n.subscribe("/move_group/display_planned_path", 1, &PandaGraspHandleServer::callBackTrajectory, this);
 
-        sub_aruco_marker_ = n.subscribe("/aruco_double/pose2", 1, &PandaGraspHandleServer::callBackAruco, this);
+        // sub_aruco_marker_ = n.subscribe("/aruco_double/pose2", 1, &PandaGraspHandleServer::callBackAruco, this);
 
-        sub_obstacle_marker_ = n.subscribe("/aruco_double/pose", 1, &PandaGraspHandleServer::callBackObstacleAruco, this);
+        // sub_obstacle_marker_ = n.subscribe("/aruco_double/pose", 1, &PandaGraspHandleServer::callBackObstacleAruco, this);
 
-        rviz_.reset(new rviz_visual_tools::RvizVisualTools("panda_link0", "/rviz_visual_tools"));
+        // sub_grasp_pose_ = n.subscribe("/handle_grasp_pose", 1, &PandaGraspHandleServer::CallbackHandleGraspPose, this);
 
+        // rviz_.reset(new rviz_visual_tools::RvizVisualTools("panda_link0", "/rviz_visual_tools"));
+
+        // // Read marker info and publish start pose and goal pose for STOMP planning
+        // SlidingGraspInfo();
+
+        // Opening-rotating
+        // RotatingGraspInfo();
+
+        // Publish collision scene
         planning_scene_diff_publisher_ = n.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
         ros::WallDuration sleep_t(0.5);
         while (planning_scene_diff_publisher_.getNumSubscribers() < 1)
@@ -80,10 +99,192 @@ class PandaGraspHandleServer
             ROS_INFO("Wait for planning scene subscriber...");
         }
 
-        n.getParam("scene_mesh_path", mesh_path_);
-        AddCollisionSceneMesh(mesh_path_);
+        n.getParam("/panda_grasp_handle_server/web_mesh_path", web_mesh_path_);
+        n.getParam("/panda_grasp_handle_server/repo_mesh_path", repo_mesh_path_);
+        std::cout << web_mesh_path_ << "\n";
+        std::cout << repo_mesh_path_ << "\n";
+
+        std::string web_scene_path, web_obj_path, repo_scene_path, repo_obj_path;
+        web_scene_path = web_mesh_path_ + "/mesh_scene.obj";
+        web_obj_path = web_mesh_path_ + "/mesh_obj.obj";
+        repo_scene_path = repo_mesh_path_ + "/mesh_scene.obj";
+        repo_obj_path = repo_mesh_path_ + "/mesh_obj.obj";
+
+        CopyMeshFromWebToRepo(web_scene_path, repo_scene_path);
+
+        CopyMeshFromWebToRepo(web_obj_path, repo_obj_path);
+
+        AddCollisionSceneMesh();
+        // AddCollisionObjMesh();
 
         
+    }
+
+    void RotatingGraspInfo()
+    {
+        RotatingGenerateGraspPose(ReadHandleMarker());
+        ROS_INFO("Finished generating grasp pose, pre-grasp pose, post-grasp pose, publish to TF tree ......");
+        PubGraspPoseToStaticTF();
+    }
+
+    void RotatingGenerateGraspPose(const geometry_msgs::TransformStamped tf_w2d)
+    {
+        T world_to_marker_start;
+        tf::transformMsgToEigen(tf_w2d.transform, world_to_marker_start);
+
+        std::string object, mode, rotation_radius_param_name, rotation_angle_param_name;
+        n.getParam("/panda_grasp_handle_server/object", object);
+        n.getParam("/panda_grasp_handle_server/mode", mode);
+        rotation_radius_param_name = mode + "/" + object + "/rotation_radius";
+        rotation_angle_param_name = mode + "/" + object + "/rotation_angle";
+
+        std::cout << rotation_radius_param_name << "\n";
+        std::float_t radius, angle;
+        n.getParam(rotation_radius_param_name, radius);
+        n.getParam(rotation_angle_param_name, angle);
+
+        angle = -angle * PI / 180;
+        std::cout << "Mode is " << mode << ", radius is " << radius << ", angle is " << angle << "\n";
+
+        T marker_start_to_goal;
+        if(object=="sink_door")
+        {
+            marker_start_to_goal.matrix() << std::cos(angle), -std::sin(angle), 0, radius*(1 - std::cos(angle)),
+                                        std::sin(angle), std::cos(angle), 0, -radius*std::sin(angle),
+                                        0, 0, 1, 0,
+                                        0, 0, 0, 1;
+        }
+        else{
+            marker_start_to_goal.matrix() << 1, 0, 0, 0,
+                                        0, std::cos(angle), -std::sin(angle), radius*std::sin(-angle),
+                                        0, std::sin(angle), std::cos(angle), -radius*(1-std::cos(-angle)),
+                                        0, 0, 0, 1;
+        }
+
+        T world_to_marker_goal;
+        world_to_marker_goal =  world_to_marker_start * marker_start_to_goal;
+
+        T marker_to_grasp;
+        Eigen::Quaterniond q_marker2grasp(0.0001, -0.3832, 0.9237, 0.001);
+        marker_to_grasp = Eigen::Translation3d(Eigen::Vector3d(0.0, 0.0, 0.08)) * q_marker2grasp.normalized().toRotationMatrix();
+
+        T marker_to_pregrasp;
+        marker_to_pregrasp = Eigen::Translation3d(Eigen::Vector3d(0.0, 0.0, 0.28)) * q_marker2grasp.normalized().toRotationMatrix();
+
+        T marker_to_post_grasp;
+        marker_to_post_grasp = Eigen::Translation3d(Eigen::Vector3d(0.0, 0.0, 0.08)) * q_marker2grasp.normalized().toRotationMatrix();
+
+        T world_to_grasp, world_to_pregrasp, world_to_postgrasp;
+        world_to_grasp = world_to_marker_start * marker_to_grasp;
+        world_to_pregrasp = world_to_marker_start * marker_to_pregrasp;
+        world_to_postgrasp = world_to_marker_goal * marker_to_post_grasp;
+
+        tf::poseEigenToMsg(world_to_grasp, grasp_pose_);
+        tf::poseEigenToMsg(world_to_pregrasp, pre_grasp_pose_);
+        tf::poseEigenToMsg(world_to_postgrasp, post_grasp_pose_);
+
+        // tf::poseEigenToMsg(world_to_marker_start, grasp_pose_);
+        // tf::poseEigenToMsg(world_to_marker_goal, post_grasp_pose_);
+    }
+
+    void SlidingGraspInfo()
+    {
+        SlidingGenerateGraspPose(ReadHandleMarker());
+        ROS_INFO("Finished generating grasp pose, pre-grasp pose, post-grasp pose, publish to TF tree ......");
+        PubGraspPoseToStaticTF();
+    }
+
+    void CallbackHandleGraspPose(const geometry_msgs::PosePtr& msg)
+    {
+        grasp_pose_ = *msg;
+        pre_grasp_pose_.position.z = grasp_pose_.position.z + 0.05;
+
+        // Publish pose in rviz
+        rviz_.reset(new rviz_visual_tools::RvizVisualTools("panda_link0", "/rviz_visual_markers"));
+        rviz_->deleteAllMarkers();
+        rviz_->publishAxisLabeled(pre_grasp_pose_,"pre_grasp_pose", rviz_visual_tools::LARGE, rviz_visual_tools::GREEN);
+        rviz_->publishAxisLabeled(grasp_pose_,"grasp_pose", rviz_visual_tools::LARGE, rviz_visual_tools::GREEN);
+        rviz_->trigger();
+
+    }
+
+// Read handle marker pose
+    geometry_msgs::TransformStamped ReadHandleMarker()
+    {
+        ROS_INFO("Read handle marker pose");
+        geometry_msgs::TransformStamped tf_w2d;
+        try
+        {
+            tf_w2d = tf2_buffer_.lookupTransform("panda_link0", "handle_marker", ros::Time::now(), ros::Duration(3.0));
+        }
+        catch(tf2::TransformException &ex)
+        {
+            ROS_WARN("%s", ex.what());
+            // return;
+        }
+
+        return tf_w2d;
+    }
+
+    void SlidingGenerateGraspPose(const geometry_msgs::TransformStamped tf_w2d)
+    {
+        T ei_d2grasp;
+        Eigen::Quaterniond q_d2grasp(0.0001, -0.3832, 0.9237, 0.001);
+        ei_d2grasp = Eigen::Translation3d(Eigen::Vector3d(-0.01, 0.0, 0.083)) * q_d2grasp.normalized().toRotationMatrix();
+
+        T ei_d2pregrasp;
+        ei_d2pregrasp = Eigen::Translation3d(Eigen::Vector3d(-0.01, 0.0, 0.183)) * q_d2grasp.normalized().toRotationMatrix();
+
+        T ei_d2postgrasp;
+        ei_d2postgrasp = Eigen::Translation3d(Eigen::Vector3d(0.0, 0.13, 0.083)) * q_d2grasp.normalized().toRotationMatrix();
+
+        T ei_w2d;
+        tf::transformMsgToEigen(tf_w2d.transform, ei_w2d);
+
+        T ei_w2L8;
+        ei_w2L8 = ei_w2d * ei_d2grasp;
+        tf::poseEigenToMsg(ei_w2L8, grasp_pose_);
+
+        T ei_w2L8_pre_grasp;
+        ei_w2L8_pre_grasp = ei_w2d * ei_d2pregrasp;
+        tf::poseEigenToMsg(ei_w2L8_pre_grasp, pre_grasp_pose_);
+
+        T ei_w2L8_post_grasp;
+        ei_w2L8_post_grasp = ei_w2d * ei_d2postgrasp;
+        tf::poseEigenToMsg(ei_w2L8_post_grasp, post_grasp_pose_);
+    }
+
+    void PubGraspPoseToStaticTF()
+    {
+        // rviz_->publishAxisLabeled(post_grasp_pose_,"goal_pose", rviz_visual_tools::LARGE, rviz_visual_tools::GREEN);
+        // rviz_->publishAxisLabeled(grasp_pose_,"grasp_pose", rviz_visual_tools::LARGE, rviz_visual_tools::GREEN);
+        // rviz_->publishAxisLabeled(pre_grasp_pose_,"pre_grasp_pose", rviz_visual_tools::LARGE, rviz_visual_tools::GREEN);
+        // rviz_->trigger();
+        
+        static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+        geometry_msgs::TransformStamped tf_grasp_pose;
+        tf_grasp_pose.transform.rotation = grasp_pose_.orientation;
+        tf_grasp_pose.transform.translation.x = grasp_pose_.position.x;
+        tf_grasp_pose.transform.translation.y = grasp_pose_.position.y;
+        tf_grasp_pose.transform.translation.z = grasp_pose_.position.z;
+
+        tf_grasp_pose.header.frame_id = "panda_link0";
+        tf_grasp_pose.header.stamp = ros::Time::now();
+        tf_grasp_pose.child_frame_id = "start_pose";
+
+        // publish post_grasp_pose for primp server
+        geometry_msgs::TransformStamped tf_post_grasp_pose;
+        tf_post_grasp_pose.transform.rotation = post_grasp_pose_.orientation;
+        tf_post_grasp_pose.transform.translation.x = post_grasp_pose_.position.x;
+        tf_post_grasp_pose.transform.translation.y = post_grasp_pose_.position.y;
+        tf_post_grasp_pose.transform.translation.z = post_grasp_pose_.position.z;
+
+        tf_post_grasp_pose.header.frame_id = "panda_link0";
+        tf_post_grasp_pose.header.stamp = ros::Time::now();
+        tf_post_grasp_pose.child_frame_id = "goal_pose";
+
+        static_broadcaster.sendTransform(tf_grasp_pose);
+        static_broadcaster.sendTransform(tf_post_grasp_pose);
     }
 
     void callBackObstacleAruco(const geometry_msgs::PosePtr& pose_c2o)
@@ -222,9 +423,9 @@ class PandaGraspHandleServer
     // Planning a grasping trajectory based on the start joint configuration of the second executed trajectory
     void callBackTrajectory(const moveit_msgs::DisplayTrajectoryPtr& msg)
     {
-        stomp_trajectory_.joint_trajectory.points.clear();
-        stomp_trajectory_ = msg->trajectory.at(0);
-        ROS_INFO("Received the STOMP planned trajectpsy...");
+        all_stomp_trajectory_ = *msg;
+        // stomp_trajectory_.joint_trajectory.points.clear();
+        // ROS_INFO("Received the STOMP planned trajectpsy...");
     }
 
     void publishGraspInfoToMoveit()
@@ -272,133 +473,218 @@ class PandaGraspHandleServer
         rviz_->trigger();
     }
 
+      bool callBackPandaGraspHandle(panda_moveit_control::PandaGraspHandle::Request& req,
+                                    panda_moveit_control::PandaGraspHandle::Response& res)
+    {
+        ROS_INFO("Received the service call for scooping ............");
+
+        AddCollisionObjMesh();
+        stomp_trajectory_ = all_stomp_trajectory_.trajectory.at(req.num);
+
+        trajectory_msgs::JointTrajectoryPoint stomp_start_point;
+        stomp_start_point = stomp_trajectory_.joint_trajectory.points.at(0);
+
+        moveit::planning_interface::MoveGroupInterface::Plan  my_plan;
+        const robot_state::JointModelGroup* joint_model_group =
+            move_group_.getCurrentState()->getJointModelGroup("panda_arm");
+
+        if(stomp_trajectory_.joint_trajectory.points.size() == 0){
+            ROS_ERROR("Haven't received STOMP trajectroy ");
+            res.success = false;
+            return 0;
+        }
+
+        move_group_.setJointValueTarget(stomp_start_point.positions);
+
+        removeCollisionDrawer();
+        ros::Duration(2.0).sleep();
+
+        if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
+        {
+            pre_grasp_2_grasp_trajectory_ = my_plan.trajectory_;
+            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
+            moveit_visual_tools_.trigger();
+            ROS_INFO("Move to stomp start poiont !!!!!");
+            move_group_.execute(my_plan.trajectory_);
+        }
+        else{
+            ROS_ERROR("Failed to plan from arm start configuration to grasp_pose_joint_values");
+            res.success = 0;
+            return 0;
+        }
+        
+        ROS_INFO("Prepare to close finger !!!!!!!!!!!!!!!!");
+        ros::Duration(5.0).sleep();
+        franka_gripper::MoveGoal move_goal;
+        move_goal.width = 0.008;
+        move_goal.speed = 0.03;
+        moveAC.sendGoal(move_goal);
+        if(moveAC.waitForResult(ros::Duration(20.0)))
+        {
+            ROS_INFO("Franka gripper sucessfully complish move action.");
+        }
+        else
+        {
+            ROS_ERROR("Franka gripper failed to complish move action.");
+        }
+
+        ros::Duration(5.0).sleep();
+        move_group_.setMaxVelocityScalingFactor(0.01);
+        move_group_.setMaxAccelerationScalingFactor(0.01);
+        moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
+        moveit_visual_tools_.trigger();
+        move_group_.execute(stomp_trajectory_);
+
+        res.success = 1;
+        return 1;
+    }
+    
+/*
+    bool callBackPandaGraspHandle(panda_moveit_control::PandaGraspHandle::Request& req,
+                                    panda_moveit_control::PandaGraspHandle::Response& res)
+    {
+        ROS_INFO("Received the grasping service call for Drawer ............");
+
+        stomp_trajectory_ = all_stomp_trajectory_.trajectory.at(req.num);
+
+        trajectory_msgs::JointTrajectoryPoint stomp_start_point;
+        stomp_start_point = stomp_trajectory_.joint_trajectory.points.at(0);
+
+        moveit::planning_interface::MoveGroupInterface::Plan  my_plan;
+        const robot_state::JointModelGroup* joint_model_group =
+            move_group_.getCurrentState()->getJointModelGroup("panda_arm");
+
+        if(stomp_trajectory_.joint_trajectory.points.size() == 0){
+            ROS_ERROR("Haven't received STOMP trajectroy ");
+            res.success = false;
+            return 0;
+        }
+
+        // set robot state to the first stomp joint trajectory point 
+        moveit::core::RobotStatePtr start_state = move_group_.getCurrentState();
+
+        moveit::core::RobotStatePtr stomp_start_state = move_group_.getCurrentState();
+        
+        std::vector<double> joint_group_positions;
+        joint_group_positions = stomp_start_point.positions;
+
+        stomp_start_state->setJointGroupPositions(joint_model_group, joint_group_positions);
+
+        move_group_.setStartState(*stomp_start_state);
+        ROS_INFO("Reverse planning, set start state to the first stomp joint trajectory point ");
+
+        std::vector<double> pre_grasp_pose_joint_values;
+        
+
+        // set pose target to pre-grasp pose
+        move_group_.setPoseTarget(pre_grasp_pose_);
+        if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
+        {
+            pre_grasp_pose_joint_values = my_plan.trajectory_.joint_trajectory.points.at(my_plan.trajectory_.joint_trajectory.points.size() - 1).positions;
+            ROS_INFO("Successfully planned reverse planning");
+            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
+            moveit_visual_tools_.trigger();
+            // move_group_.execute(my_plan.trajectory_);
+        }
+        else{
+            ROS_ERROR("Failed to plan in a reverse way");
+            res.success = 0;
+            return 0;
+        }
+
+        // Plan from start configuration to the pre_grasp_pose_joint_values
+
+        move_group_.setStartState(*start_state);
+        ROS_INFO("Start plan from arm start configuration to pre_grasp_pose_joint_values");
+        move_group_.setJointValueTarget(pre_grasp_pose_joint_values);
+
+        AddCollisionObjMesh();
+        ros::Duration(2.0).sleep();
+
+        if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
+        {
+            pre_grasp_trajectory_ = my_plan.trajectory_;
+            ROS_INFO("Successfully planned from arm start configuration to pre_grasp_pose_joint_values");
+            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
+            moveit_visual_tools_.trigger();
+            // move_group_.execute(my_plan.trajectory_);
+        }
+        else{
+            ROS_ERROR("Failed to plan from arm start configuration to pre_grasp_pose_joint_values");
+            res.success = 0;
+            return 0;
+        }
+
+        moveit::core::RobotStatePtr pre_grasp_finished_state = move_group_.getCurrentState();
+        pre_grasp_finished_state->setJointGroupPositions(joint_model_group, pre_grasp_pose_joint_values);
+        move_group_.setStartState(*pre_grasp_finished_state);
+
+        move_group_.setJointValueTarget(stomp_start_point.positions);
+
+        removeCollisionDrawer();
+        ros::Duration(2.0).sleep();
+
+        if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
+        {
+            pre_grasp_2_grasp_trajectory_ = my_plan.trajectory_;
+            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
+            moveit_visual_tools_.trigger();
+            // move_group_.execute(my_plan.trajectory_);
+        }
+        else{
+            ROS_ERROR("Failed to plan from arm start configuration to grasp_pose_joint_values");
+            res.success = 0;
+            return 0;
+        }
+        
+    
+        moveit_visual_tools_.publishTrajectoryLine(pre_grasp_trajectory_, joint_model_group);
+        moveit_visual_tools_.publishTrajectoryLine(pre_grasp_2_grasp_trajectory_, joint_model_group);
+        moveit_visual_tools_.publishTrajectoryLine(stomp_trajectory_, joint_model_group);
+        moveit_visual_tools_.trigger();
+
+
+        move_group_.setStartState(*start_state);
+        move_group_.execute(pre_grasp_trajectory_);
+
+        ros::Duration(1.0).sleep();
+
+        move_group_.execute(pre_grasp_2_grasp_trajectory_);
+
+        ros::Duration(0.5).sleep();
+        franka_gripper::MoveGoal move_goal;
+        move_goal.width = 0.04;
+        move_goal.speed = 0.03;
+        moveAC.sendGoal(move_goal);
+        if(moveAC.waitForResult(ros::Duration(3.0)))
+        {
+            ROS_INFO("Franka gripper sucessfully complish move action.");
+        }
+        else
+        {
+            ROS_ERROR("Franka gripper failed to complish move action.");
+        }
+
+        ros::Duration(1.0).sleep();
+        move_group_.setMaxVelocityScalingFactor(0.01);
+        move_group_.setMaxAccelerationScalingFactor(0.01);
+        move_group_.execute(stomp_trajectory_);
+
+        res.success = 1;
+        return 1;
+    }
+*/
+
 // When receive the request to grasp the handle of the drawer, service callback function listen to the drawer marker pose and convert it to the 
 // target grasp message(contained pre-grasp, grasp, post-grasp info). Then it calls the arm to execute the grasp
+/*
     bool callBackPandaGraspHandle(panda_moveit_control::PandaGraspHandle::Request& req,
                                 panda_moveit_control::PandaGraspHandle::Response& res)
     {
-        ROS_INFO("Received the grasping service call...");
+        ROS_INFO("Received the grasping service call for pouring .........");
 
-
-        // trajectory_msgs::JointTrajectoryPoint stomp_start_point;
-        // stomp_start_point = stomp_trajectory_.joint_trajectory.points.at(0);
-
-        // moveit::planning_interface::MoveGroupInterface::Plan  my_plan;
-        // const robot_state::JointModelGroup* joint_model_group =
-        //     move_group_.getCurrentState()->getJointModelGroup("panda_arm");
-
-        // if(stomp_trajectory_.joint_trajectory.points.size() == 0){
-        //     ROS_ERROR("Haven't received STOMP trajectroy ");
-        //     res.success = false;
-        //     return 0;
-        // }
-
-        // // set robot state to the first stomp joint trajectory point 
-        // moveit::core::RobotStatePtr start_state = move_group_.getCurrentState();
-
-        // moveit::core::RobotStatePtr stomp_start_state = move_group_.getCurrentState();
-        
-        // std::vector<double> joint_group_positions;
-        // joint_group_positions = stomp_start_point.positions;
-
-        // stomp_start_state->setJointGroupPositions(joint_model_group, joint_group_positions);
-
-        // move_group_.setStartState(*stomp_start_state);
-        // ROS_INFO("Reverse planning, set start state to the first stomp joint trajectory point ");
-
-        // std::vector<double> pre_grasp_pose_joint_values;
-        
-
-        // // set pose target to pre-grasp pose
-        // move_group_.setPoseTarget(pre_grasp_pose_);
-        // if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        // {
-        //     pre_grasp_pose_joint_values = my_plan.trajectory_.joint_trajectory.points.at(my_plan.trajectory_.joint_trajectory.points.size() - 1).positions;
-        //     ROS_INFO("Successfully planned reverse planning");
-        //     moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-        //     moveit_visual_tools_.trigger();
-        //     // move_group_.execute(my_plan.trajectory_);
-        // }
-        // else{
-        //     ROS_ERROR("Failed to plan in a reverse way");
-        //     res.success = 0;
-        //     return 0;
-        // }
-
-        // // Plan from start configuration to the pre_grasp_pose_joint_values
-
-        // move_group_.setStartState(*start_state);
-        // ROS_INFO("Start plan from arm start configuration to pre_grasp_pose_joint_values");
-        // move_group_.setJointValueTarget(pre_grasp_pose_joint_values);
-
-        // addCollisionDrawer();
-        // ros::Duration(1.0).sleep();
-
-        // if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        // {
-        //     pre_grasp_trajectory_ = my_plan.trajectory_;
-        //     ROS_INFO("Successfully planned from arm start configuration to pre_grasp_pose_joint_values");
-        //     moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-        //     moveit_visual_tools_.trigger();
-        //     // move_group_.execute(my_plan.trajectory_);
-        // }
-        // else{
-        //     ROS_ERROR("Failed to plan from arm start configuration to pre_grasp_pose_joint_values");
-        //     res.success = 0;
-        //     return 0;
-        // }
-
-        // moveit::core::RobotStatePtr pre_grasp_finished_state = move_group_.getCurrentState();
-        // pre_grasp_finished_state->setJointGroupPositions(joint_model_group, pre_grasp_pose_joint_values);
-        // move_group_.setStartState(*pre_grasp_finished_state);
-
-        // move_group_.setJointValueTarget(stomp_start_point.positions);
-
-        // removeCollisionDrawer();
-        // ros::Duration(2.0).sleep();
-
-        // if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        // {
-        //     pre_grasp_2_grasp_trajectory_ = my_plan.trajectory_;
-        //     moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-        //     moveit_visual_tools_.trigger();
-        //     // move_group_.execute(my_plan.trajectory_);
-        // }
-        // else{
-        //     ROS_ERROR("Failed to plan from arm start configuration to pre_grasp_pose_joint_values");
-        //     res.success = 0;
-        //     return 0;
-        // }
-        
-    
-        // moveit_visual_tools_.publishTrajectoryLine(pre_grasp_trajectory_, joint_model_group);
-        // moveit_visual_tools_.publishTrajectoryLine(pre_grasp_2_grasp_trajectory_, joint_model_group);
-        // moveit_visual_tools_.publishTrajectoryLine(stomp_trajectory_, joint_model_group);
-        // moveit_visual_tools_.trigger();
-
-
-        // move_group_.setStartState(*start_state);
-        // move_group_.execute(pre_grasp_trajectory_);
-
-        // ros::Duration(1.0).sleep();
-
-        // move_group_.execute(pre_grasp_2_grasp_trajectory_);
-
-        // ros::Duration(0.5).sleep();
-        // franka_gripper::MoveGoal move_goal;
-        // move_goal.width = 0.03;
-        // move_goal.speed = 0.03;
-        // moveAC.sendGoal(move_goal);
-        // if(moveAC.waitForResult(ros::Duration(3.0)))
-        // {
-        //     ROS_INFO("Franka gripper sucessfully complish move action.");
-        // }
-        // else
-        // {
-        //     ROS_ERROR("Franka gripper failed to complish move action.");
-        // }
-
-        // ros::Duration(0.5).sleep();
+        stomp_trajectory_ = all_stomp_trajectory_.trajectory.at(req.num);
+        std::cout << "STOMP traj number is " << stomp_trajectory_.joint_trajectory.points.size() << "\n";
 
         trajectory_msgs::JointTrajectoryPoint stomp_start_point;
         stomp_start_point = stomp_trajectory_.joint_trajectory.points.at(0);
@@ -411,7 +697,7 @@ class PandaGraspHandleServer
         if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
         {
             move_group_.execute(my_plan.trajectory_);
-            ROS_INFO("Reached start point, hand over cup ...");
+            ROS_INFO("Reached start point, hand over cup!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
         }
         else{
             ROS_ERROR("Failed to plan from arm start configuration to stomp first points");
@@ -419,12 +705,12 @@ class PandaGraspHandleServer
             return 0;
         }
 
-        ros::Duration(10.0).sleep();
+        ros::Duration(5.0).sleep();
         franka_gripper::MoveGoal move_goal;
-        move_goal.width = 0.05;
+        move_goal.width = 0.055;
         move_goal.speed = 0.01;
         moveAC.sendGoal(move_goal);
-        if(moveAC.waitForResult(ros::Duration(3.0)))
+        if(moveAC.waitForResult(ros::Duration(15.0)))
         {
             ROS_INFO("Franka gripper sucessfully complish move action.");
         }
@@ -433,8 +719,15 @@ class PandaGraspHandleServer
             ROS_ERROR("Franka gripper failed to complish move action.");
         }
 
+        sound_play::SoundClient sc;
+        sc.say("Next");
+        // sc.playWaveFromPkg("sound_play", "sounds/BACKINGUP.ogg");
+
         ros::Duration(5.0).sleep();
 
+        std::cout << "STOMP traj number is " << stomp_trajectory_.joint_trajectory.points.size() << "\n";
+        move_group_.setMaxVelocityScalingFactor(0.05);
+        move_group_.setMaxAccelerationScalingFactor(0.1);
         move_group_.execute(stomp_trajectory_);
 
         ros::Duration(1.0).sleep();
@@ -442,321 +735,8 @@ class PandaGraspHandleServer
         res.success = 1;
         return 1;
 
-
-
-        /*
-
-        moveit::core::RobotStatePtr start_state = move_group_.getCurrentState();
-        // Generate pre-grasp trajectory
-        addCollisionDrawer();
-        ros::Duration(0.5).sleep();
-        // move to pre_grasp_pose
-        move_group_.setPoseTarget(pre_grasp_pose_);
-        if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        {
-            pre_grasp_trajectory_ = my_plan.trajectory_;
-            ROS_INFO("Successfully planned pre-grasp trajectory");
-            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-            moveit_visual_tools_.trigger();
-            // move_group_.execute(my_plan.trajectory_);
-        }
-        else
-        {
-            ROS_ERROR("Failed to plan a path to the pre-grasp pose...");
-
-            removeCollisionDrawer();
-            ros::Duration(1).sleep();
-            ROS_INFO("Pre-grasp not work for current setting");
-
-            move_group_.setStartState(*start_state);
-            move_group_.setJointValueTarget(stomp_start_point.positions);
-
-            if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-            {
-                direct_grasp_trajectory_ = my_plan.trajectory_;
-            }
-            else{
-                ROS_ERROR("Failed to plan a path to the start joint configuration of STOMP trajectory...");
-                return 0;
-            }
-
-            moveit_msgs::RobotTrajectory display_trajectory;
-            display_trajectory = direct_grasp_trajectory_;
-            display_trajectory.joint_trajectory.points.insert(display_trajectory.joint_trajectory.points.end(), 
-                        stomp_trajectory_.joint_trajectory.points.begin(), stomp_trajectory_.joint_trajectory.points.end());
-            moveit_visual_tools_.publishTrajectoryLine(display_trajectory, joint_model_group);
-            moveit_visual_tools_.trigger();
-
-             if(move_group_.execute(direct_grasp_trajectory_) == moveit_msgs::MoveItErrorCodes::SUCCESS)
-            {
-                ros::Duration(0.5).sleep();
-                franka_gripper::MoveGoal move_goal;
-                move_goal.width = 0.03;
-                move_goal.speed = 0.03;
-                moveAC.sendGoal(move_goal);
-                if(moveAC.waitForResult(ros::Duration(3.0)))
-                {
-                    ROS_INFO("Franka gripper sucessfully complish move action.");
-                }
-                else
-                {
-                    ROS_ERROR("Franka gripper failed to complish move action.");
-                }
-
-                ros::Duration(0.5).sleep();
-
-                if(move_group_.execute(stomp_trajectory_) == moveit_msgs::MoveItErrorCodes::SUCCESS)
-                {
-                    ROS_INFO("Successfully execute all trajectory...");
-                    res.success = 1;
-                    return 1;
-                }
-                else{
-                    res.success = 0;
-                    return 0;
-                }
-            }
-        }
-        ros::Duration(2).sleep();
-        removeCollisionDrawer();
-        ros::Duration(1).sleep();
-        
-        // Use this to update robot state
-        moveit::core::RobotStatePtr current_state = move_group_.getCurrentState();
-        std::vector<double> joint_group_positions;
-        // current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
-        // for(auto i: joint_group_positions)
-        //     std::cout << i << ' ';
-        // std::cout << "\n";
-
-        joint_group_positions = pre_grasp_trajectory_.joint_trajectory.points.back().positions;
-        // for(auto i: joint_group_positions)
-        //     std::cout << i << ' ';
-        // std::cout << "\n";
-    
-        current_state->setJointGroupPositions(joint_model_group, joint_group_positions);
-
-        move_group_.setStartState(*current_state);
-        ROS_INFO("Set robot state to a new state");
-        
-        if(stomp_trajectory_.joint_trajectory.points.size() == 0){
-            ROS_ERROR("Haven't received STOMP trajectroy ");
-            res.success = false;
-            return 0;
-        }
-
-        //Set joint value target to the end joint configuration of STOMP trajectory
-        move_group_.setJointValueTarget(stomp_start_point.positions);
-
-        if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        {
-            pre_grasp_2_grasp_trajectory_ = my_plan.trajectory_;
-            ROS_INFO("Successfully planned pre_grasp_2_grasp_trajectory_");
-            moveit_visual_tools_.publishTrajectoryLine( my_plan.trajectory_, joint_model_group);
-            moveit_visual_tools_.trigger();
-            // std::cout<< "STOMP trajectory points number is: " << stomp_trajectory_.joint_trajectory.points.size() << "\n";
-            // std::cout<< "Execute trajectory points number is: " << execute_trajectory_.joint_trajectory.points.size() << "\n";
-        }
-        else
-        {
-            ROS_ERROR("Failed to plan a path from pre-grasp pose to the start joint configuration of STOMP trajectory...");
-            return 0;
-        }
-
-        franka_gripper::HomingGoal homing_goal;
-        homingAC.sendGoalAndWait(homing_goal, ros::Duration(0.5));
-
-        if(pre_grasp_2_grasp_trajectory_.joint_trajectory.points.size() <= 100)
-        {
-            ROS_INFO("Pre-grasp works for current setting");
-
-            moveit_msgs::RobotTrajectory display_trajectory;
-            display_trajectory = pre_grasp_trajectory_;
-            display_trajectory.joint_trajectory.points.insert(display_trajectory.joint_trajectory.points.end(), 
-                        pre_grasp_2_grasp_trajectory_.joint_trajectory.points.begin(), pre_grasp_2_grasp_trajectory_.joint_trajectory.points.end());
-            display_trajectory.joint_trajectory.points.insert(display_trajectory.joint_trajectory.points.end(), 
-                        stomp_trajectory_.joint_trajectory.points.begin(), stomp_trajectory_.joint_trajectory.points.end());
-            moveit_visual_tools_.publishTrajectoryLine(display_trajectory, joint_model_group);
-            moveit_visual_tools_.trigger();
-
-            if(move_group_.execute(pre_grasp_trajectory_) == moveit_msgs::MoveItErrorCodes::SUCCESS)
-            {
-                if(move_group_.execute(pre_grasp_2_grasp_trajectory_) == moveit_msgs::MoveItErrorCodes::SUCCESS)
-                {
-                    ros::Duration(0.5).sleep();
-                    franka_gripper::MoveGoal move_goal;
-                    move_goal.width = 0.03;
-                    move_goal.speed = 0.03;
-                    moveAC.sendGoal(move_goal);
-                    if(moveAC.waitForResult(ros::Duration(3.0)))
-                    {
-                        ROS_INFO("Franka gripper sucessfully complish move action.");
-                    }
-                    else
-                    {
-                        ROS_ERROR("Franka gripper failed to complish move action.");
-                    }
-
-                    ros::Duration(0.5).sleep();
-                
-
-                    if(move_group_.execute(stomp_trajectory_) == moveit_msgs::MoveItErrorCodes::SUCCESS)
-                    {
-                        ROS_INFO("Successfully execute all trajectory...");
-                        res.success = 1;
-                        return 1;
-                    }
-                    else{
-                        res.success = 0;
-                        return 0;
-                    }
-                }
-            }
-        }
-        else{
-            ROS_INFO("Pre-grasp not work for current setting");
-
-            move_group_.setStartState(*start_state);
-            move_group_.setJointValueTarget(stomp_start_point.positions);
-
-            if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-            {
-                direct_grasp_trajectory_ = my_plan.trajectory_;
-            }
-            else{
-                ROS_ERROR("Failed to plan a path to the start joint configuration of STOMP trajectory...");
-                return 0;
-            }
-
-            moveit_msgs::RobotTrajectory display_trajectory;
-            display_trajectory = direct_grasp_trajectory_;
-            display_trajectory.joint_trajectory.points.insert(display_trajectory.joint_trajectory.points.end(), 
-                        stomp_trajectory_.joint_trajectory.points.begin(), stomp_trajectory_.joint_trajectory.points.end());
-            moveit_visual_tools_.publishTrajectoryLine(display_trajectory, joint_model_group);
-            moveit_visual_tools_.trigger();
-
-             if(move_group_.execute(direct_grasp_trajectory_) == moveit_msgs::MoveItErrorCodes::SUCCESS)
-            {
-                ros::Duration(0.5).sleep();
-                franka_gripper::MoveGoal move_goal;
-                move_goal.width = 0.03;
-                move_goal.speed = 0.03;
-                moveAC.sendGoal(move_goal);
-                if(moveAC.waitForResult(ros::Duration(3.0)))
-                {
-                    ROS_INFO("Franka gripper sucessfully complish move action.");
-                }
-                else
-                {
-                    ROS_ERROR("Franka gripper failed to complish move action.");
-                }
-
-                ros::Duration(0.5).sleep();
-
-                if(move_group_.execute(stomp_trajectory_) == moveit_msgs::MoveItErrorCodes::SUCCESS)
-                {
-                    ROS_INFO("Successfully execute all trajectory...");
-                    res.success = 1;
-                    return 1;
-                }
-                else{
-                    res.success = 0;
-                    return 0;
-                }
-            }
-        }
-
-
-        // if(move_group_.execute(execute_trajectory_) == moveit_msgs::MoveItErrorCodes::FAILURE)
-        // {
-        //     ROS_ERROR("Failed to exeucte the grasping trajectory");
-        //     res.success = 0;
-        //     return 0;
-        // }
-
-        // move_group_.setPoseTarget(grasp_pose_);
-        // if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        // {
-        //     moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-        //     moveit_visual_tools_.trigger();
-        //     if(move_group_.execute(my_plan.trajectory_) == moveit_msgs::MoveItErrorCodes::FAILURE)
-        //     {
-        //         ROS_ERROR("Failed to exeucte the grasping trajectory");
-        //         res.success = 0;
-        //         return 0;
-        //     }
-        // }
-        // else
-        // {
-        //     ROS_ERROR("Failed to plan a path to the goal pose...");
-        //     return 0;
-        // }
-
-        // Close finger
-        // franka_gripper::MoveGoal move_goal;
-        // move_goal.width = 0.03;
-        // move_goal.speed = 0.03;
-        // moveAC.sendGoal(move_goal);
-        // if(moveAC.waitForResult(ros::Duration(3.0)))
-        // {
-        //     ROS_INFO("Franka gripper sucessfully complish move action.");
-        // }
-        // else
-        // {
-        //     ROS_ERROR("Franka gripper failed to complish move action.");
-        // }
-
-        // ros::Duration(0.5).sleep();
-
-        // If the current robot state is not aligned with the first point of trajectory,
-        // we insert the current robot state as the new first point of trajectory
-        // moveit::core::RobotStatePtr current_state = move_group_.getCurrentState();
-        
-        // trajectory_msgs::JointTrajectoryPoint first_point;
-        // first_point.positions = stomp_trajectory_.joint_trajectory.points[0].positions;
-        // if(first_point.positions != move_group_.getCurrentJointValues())
-        // {
-        //     first_point.positions = move_group_.getCurrentJointValues();
-        //     stomp_trajectory_.joint_trajectory.points.insert(stomp_trajectory_.joint_trajectory.points.begin(), first_point);
-        // }
-
-        // move_group_.setJointValueTarget(second_tra_start_point.positions);
-        // if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        // {
-        //     move_group_.execute(my_plan.trajectory_);
-        //     ROS_INFO("Finished grasp end joint configuration to STOMP first joint configuration");
-        //     std::cout << my_plan.trajectory_.joint_trajectory.points.size() <<"\n";
-        // }
-
-        // if(move_group_.execute(stomp_trajectory_) == moveit_msgs::MoveItErrorCodes::FAILURE)
-        // {
-        //     ROS_ERROR("Failed to execute the STOMP trajectory");
-        //     res.success = 0;
-        //     return 0;
-        // }
-        // else{
-        //     ROS_INFO("Successfully grasped the handle and execute the STOMP trajectory");
-        // }
-        
-        
-        // move_group_.setPoseTarget(post_grasp_pose_);
-
-        // if(move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-        // {
-        //     moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-        //     moveit_visual_tools_.trigger();
-        //     move_group_.execute(my_plan.trajectory_);
-        // }
-        // else
-        // {
-        //     ROS_ERROR("Failed to plan a path to the goal pose...");
-        //     return 0;
-        // }
-
-*/
-        
-
 }
+*/
 
 // Generate grasp info from the input transformation from world to drawer  
     void generateGraspInfo(geometry_msgs::TransformStamped T_w2d)
@@ -903,7 +883,7 @@ class PandaGraspHandleServer
     {
         
         moveit_msgs::CollisionObject collision_drawer;
-        collision_drawer.id = "drawer";
+        collision_drawer.id = "collision_obj";
         collision_drawer.header.frame_id = "world";
 
         collision_drawer.primitives.resize(1);
@@ -934,8 +914,8 @@ class PandaGraspHandleServer
     void removeCollisionDrawer()
     {
         moveit_msgs::CollisionObject remove_object;
-        remove_object.id = "drawer";
-        remove_object.header.frame_id = "world";
+        remove_object.id = "collision_obj";
+        remove_object.header.frame_id = "panda_link0";
         remove_object.operation = remove_object.REMOVE;
 
         moveit_msgs::PlanningScene planning_scene;
@@ -946,10 +926,12 @@ class PandaGraspHandleServer
         ROS_INFO("Remove collision drawer...");
     }
 
-    void AddCollisionSceneMesh(std::string mesh_path)
+    void AddCollisionSceneMesh()
     {
+        moveit_msgs::PlanningScene planning_scene;
+
         moveit_msgs::CollisionObject collision_scene;
-        collision_scene.header.frame_id = "world";
+        collision_scene.header.frame_id = "panda_link0";
         collision_scene.header.stamp = ros::Time::now();
         collision_scene.id = "collision_scene";
         
@@ -958,20 +940,69 @@ class PandaGraspHandleServer
         collision_scene.mesh_poses.resize(1);
         collision_scene.operation = moveit_msgs::CollisionObject::ADD;
 
-        shapes::Mesh* scene_mesh = shapes::createMeshFromResource(mesh_path);
+        shapes::Mesh* scene_mesh = shapes::createMeshFromResource("package://panda_moveit_control/models/mesh_scene.obj");
         shapes::ShapeMsg scene_mesh_msg;
         shapes::constructMsgFromShape(scene_mesh, scene_mesh_msg);
 
         shape_msgs::Mesh scene_mesh_moveit = boost::get<shape_msgs::Mesh>(scene_mesh_msg);
         collision_scene.meshes[0].triangles = scene_mesh_moveit.triangles;
         collision_scene.meshes[0].vertices = scene_mesh_moveit.vertices;
-
-        moveit_msgs::PlanningScene planning_scene;
         planning_scene.world.collision_objects.push_back(collision_scene);
+
         planning_scene.is_diff = true;
         planning_scene_diff_publisher_.publish(planning_scene);
 
         ROS_INFO("Publish scene collision to planning scene");
+    }
+
+    void AddCollisionObjMesh()
+    {
+        moveit_msgs::PlanningScene planning_scene;
+
+        // Add obj mesh
+        moveit_msgs::CollisionObject collision_obj;
+        collision_obj.header.frame_id = "panda_link0";
+        collision_obj.header.stamp = ros::Time::now();
+        collision_obj.id = "collision_obj";
+
+        collision_obj.meshes.resize(1);
+        collision_obj.mesh_poses.resize(1);
+
+        shapes::Mesh* obj_mesh = shapes::createMeshFromResource("package://panda_moveit_control/models/mesh_obj.obj");
+        shapes::ShapeMsg obj_mesh_msg;
+        shapes::constructMsgFromShape(obj_mesh, obj_mesh_msg);
+
+        shape_msgs::Mesh obj_mesh_moveit = boost::get<shape_msgs::Mesh>(obj_mesh_msg);
+        collision_obj.meshes[0].triangles = obj_mesh_moveit.triangles;
+        collision_obj.meshes[0].vertices = obj_mesh_moveit.vertices;
+        planning_scene.world.collision_objects.push_back(collision_obj);
+
+        planning_scene.is_diff = true;
+        planning_scene_diff_publisher_.publish(planning_scene);
+
+        ROS_INFO("Publish obj collision to planning scene");
+    }
+
+    void CopyMeshFromWebToRepo(std::string web_path, std::string repo_path)
+    {
+        if(std::filesystem::exists(repo_path)){
+            std::filesystem::remove(repo_path);
+        }
+        std::filesystem::copy_file(web_path, repo_path);
+        ros::Duration(2.0).sleep();
+    }
+
+    bool callBackDisplayStompTraj(panda_moveit_control::DisplayStompTraj::Request& req,
+                                panda_moveit_control::DisplayStompTraj::Response& res)
+    {
+        moveit_msgs::DisplayTrajectory display_traj;
+        display_traj.trajectory.push_back(all_stomp_trajectory_.trajectory.at(req.num));
+        display_traj.trajectory_start = all_stomp_trajectory_.trajectory_start;
+
+        std::cout << "Dispaly " << req.num << " planned trajectory" << "\n";
+        display_stomp_traj_publisher_.publish(display_traj);
+        return 1;
+        
     }
 
     protected:
@@ -1016,7 +1047,14 @@ class PandaGraspHandleServer
     ros::Subscriber sub_obstacle_marker_;
     ros::Publisher  planning_scene_diff_publisher_;
 
-    std::string mesh_path_;
+    std::string web_mesh_path_;
+    std::string repo_mesh_path_;
+
+    moveit_msgs::DisplayTrajectory all_stomp_trajectory_;
+    ros::ServiceServer ss_display_stomp_traj_;
+    ros::Publisher display_stomp_traj_publisher_;
+
+    ros::Subscriber sub_grasp_pose_;
 
 };
 
