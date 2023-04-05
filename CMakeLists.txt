@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(panda_moveit_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   franka_gripper
   geometric_shapes
+  sound_play
 )
 
 ## System dependencies are found with CMake's conventions
@@ -71,6 +72,7 @@ add_service_files(
   FILES
   PandaGraspHandle.srv
   GraspHandleInfo.srv
+  DisplayStompTraj.srv
 )
 
 ## Generate actions in the 'action' folder
