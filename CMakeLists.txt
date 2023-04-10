@@ -118,7 +118,7 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+ INCLUDE_DIRS include
 #  LIBRARIES panda_moveit_control
 #  CATKIN_DEPENDS franka_ros joint_state_publisher message_generation moveit_core moveit_msgs moveit_ros_planning moveit_ros_planning_interface moveit_visual_tools robot_state_publis roscpp rospy std_msgs tf2 trajectory_msgs
 #  DEPENDS system_lib
@@ -131,19 +131,24 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
   ${catkin_INCLUDE_DIRS}
 )
+include_directories(${PROJECT_SOURCE_DIR})
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/panda_moveit_control.cpp
-# )
+add_library(PlanningSceneOperation
+  src/planning_scene/planning_scene_operation.cc
+)
+add_library(PandaArmPlanningControl
+  src/robot/panda_arm_planning_control.cc
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(PlanningSceneOperation ${catkin_EXPORTED_TARGETS})
+add_dependencies(PandaArmPlanningControl ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
