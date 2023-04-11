@@ -72,6 +72,7 @@ add_service_files(
   PandaGraspHandle.srv
   GraspHandleInfo.srv
   DisplayStompTraj.srv
+  ExecuteStompTraj.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -129,16 +130,27 @@ target_link_libraries(${PROJECT_NAME}_robot
   ${catkin_LIBRARIES}
 )
 
+add_library(ExecuteStompTraj
+  src/stomp/execute_stomp_traj.cc
+)
+target_link_libraries(ExecuteStompTraj
+  ${PROJECT_NAME}_robot
+  ${PROJECT_NAME}_planning_scene_operation
+)
+
 ## Declare a C++ executable
 add_executable(panda_grasp_handle_server src/panda_grasp_handle_server.cpp)
 target_link_libraries(panda_grasp_handle_server
-  ${catkin_LIBRARIES}
   ${PROJECT_NAME}_robot
 )
 
 add_executable(test_class src/test_class.cc)
 target_link_libraries(test_class
-  ${catkin_LIBRARIES}
   ${PROJECT_NAME}_robot
   ${PROJECT_NAME}_planning_scene_operation
 )
+
+# add_executable(pouring src/stomp/pouring.cc)
+# target_link_libraries(pouring
+#   ExecuteStompTraj
+# )

@@ -94,52 +94,32 @@ class PandaGraspHandleServer
         // RotatingGraspInfo();
 
         // // Publish collision scene
-        // planning_scene_diff_publisher_ = n.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
-        // ros::WallDuration sleep_t(0.5);
-        // while (planning_scene_diff_publisher_.getNumSubscribers() < 1)
-        // {
-        //     sleep_t.sleep();
-        //     ROS_INFO("Wait for planning scene subscriber...");
-        // }
+        planning_scene_diff_publisher_ = n.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+        ros::WallDuration sleep_t(0.5);
+        while (planning_scene_diff_publisher_.getNumSubscribers() < 1)
+        {
+            sleep_t.sleep();
+            ROS_INFO("Wait for planning scene subscriber...");
+        }
 
-        // n.getParam("/panda_grasp_handle_server/web_mesh_path", web_mesh_path_);
-        // n.getParam("/panda_grasp_handle_server/repo_mesh_path", repo_mesh_path_);
-        // std::cout << web_mesh_path_ << "\n";
-        // std::cout << repo_mesh_path_ << "\n";
+        n.getParam("/panda_grasp_handle_server/web_mesh_path", web_mesh_path_);
+        n.getParam("/panda_grasp_handle_server/repo_mesh_path", repo_mesh_path_);
+        std::cout << web_mesh_path_ << "\n";
+        std::cout << repo_mesh_path_ << "\n";
 
-        // std::string web_scene_path, web_obj_path, repo_scene_path, repo_obj_path;
-        // web_scene_path = web_mesh_path_ + "/mesh_scene.obj";
-        // web_obj_path = web_mesh_path_ + "/mesh_obj.obj";
-        // repo_scene_path = repo_mesh_path_ + "/mesh_scene.obj";
-        // repo_obj_path = repo_mesh_path_ + "/mesh_obj.obj";
+        std::string web_scene_path, web_obj_path, repo_scene_path, repo_obj_path;
+        web_scene_path = web_mesh_path_ + "/mesh_scene.obj";
+        web_obj_path = web_mesh_path_ + "/mesh_obj.obj";
+        repo_scene_path = repo_mesh_path_ + "/mesh_scene.obj";
+        repo_obj_path = repo_mesh_path_ + "/mesh_obj.obj";
 
-        // CopyMeshFromWebToRepo(web_scene_path, repo_scene_path);
+        CopyMeshFromWebToRepo(web_scene_path, repo_scene_path);
 
-        // CopyMeshFromWebToRepo(web_obj_path, repo_obj_path);
+        CopyMeshFromWebToRepo(web_obj_path, repo_obj_path);
 
-        // AddCollisionSceneMesh();
+        AddCollisionSceneMesh();
         // AddCollisionObjMesh();
 
-        // ROS_INFO("Prepare to close finger !!!!!!!!!!!!!!!!");
-        // franka_gripper::MoveGoal move_goal;
-        // move_goal.width = 0.008;
-        // move_goal.speed = 0.03;
-        // moveAC.sendGoal(move_goal);
-        // if(moveAC.waitForResult(ros::Duration(20.0)))
-        // {
-        //     ROS_INFO("Franka gripper sucessfully complish move action.");
-        // }
-        // else
-        // {
-        //     ROS_ERROR("Franka gripper failed to complish move action.");
-        // }
-
-        // GripperHomingAction();
-        GripperMoveAction(0.008, 0.03);
-        GripperHomingAction();
-        GripperMoveAction(0.01, 0.03);
-
-        
     }
 
     void RotatingGraspInfo()
