@@ -808,24 +808,6 @@ class PandaGraspHandleServer
         ROS_INFO("The quaternion xyzw is: [%f, %f, %f, %f]", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
     }
 
-    void armMove(geometry_msgs::Pose target_pose){
-        moveit::planning_interface::MoveGroupInterface::Plan  my_plan;
-        
-        const robot_state::JointModelGroup* joint_model_group =
-            move_group_.getCurrentState()->getJointModelGroup("panda_arm");
-
-        move_group_.setPoseTarget(target_pose);
-        bool success = (move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-        if(success)
-        {
-            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-            move_group_.move();
-        }
-        else{
-            ROS_INFO("Failed to find solution to move the arm to the target pose");
-        }
-    }
-
     // Add table and obstacle to the planning scene
     void addCollisionObjects()
     {
