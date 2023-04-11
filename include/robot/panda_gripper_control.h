@@ -19,7 +19,7 @@ bool GripperMoveAction(double width, double speed)
     move_ac.sendGoal(move_goal);
     if(move_ac.waitForResult(ros::Duration(20.0)))
     {
-        ROS_INFO("Franka gripper sucessfully complish move to distance %d.", width);
+        ROS_INFO("Franka gripper sucessfully complish move to distance %f.", width);
     }
     else
     {
@@ -30,10 +30,10 @@ bool GripperMoveAction(double width, double speed)
 
 bool GripperMoveAction(double width)
 {
-    GripperMoveAction(width, 0.03);
+    return GripperMoveAction(width, 0.03);
 }
 
 bool GripperHomingAction()
 {
-    GripperMoveAction(0.8, 0.05);
+    return GripperMoveAction(0.8, 0.05);
 }

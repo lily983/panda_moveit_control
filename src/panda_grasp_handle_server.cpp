@@ -37,6 +37,8 @@
 
 #include <sound_play/sound_play.h>
 
+#include "include/robot/panda_gripper_control.h"
+
 #define PI 3.1415926
 typedef Eigen::Transform<double, 3, Eigen::Affine> T;
 
@@ -52,6 +54,7 @@ class PandaGraspHandleServer
     , moveit_visual_tools_("panda_link0")
     , planning_scene_interface_("", true)
     {
+        // GripperMoveAction(0.3);
         // std::cout << "1" << "\n";
         ss_grasp_handle_ = n.advertiseService("panda_grasp_handle", &PandaGraspHandleServer::callBackPandaGraspHandle, this);
 
