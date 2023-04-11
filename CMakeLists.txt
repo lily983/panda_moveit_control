@@ -128,7 +128,7 @@ add_library(${PROJECT_NAME}_robot
   include/robot/panda_gripper_control.h
 )
 target_link_libraries(${PROJECT_NAME}_robot
-  ${PROJECT_NAME}_planning_scene
+  ${catkin_LIBRARIES}
 )
 
 ## Declare a C++ executable

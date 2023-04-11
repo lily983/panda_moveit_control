@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include "include/planning_scene/planning_scene_operation.h"
 #include "include/robot/panda_arm_planning_control.h"
 #include "include/robot/panda_gripper_control.h"
 

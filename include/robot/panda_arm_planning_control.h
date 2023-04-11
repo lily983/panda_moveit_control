@@ -12,7 +12,7 @@
 class PandaArmPlanningControl
 {
     public:
-    PandaArmPlanningControl(ros::NodeHandle nh, std::string planning_group, double_t max_vel_scale = 0.01, double_t max_acc_scale = 0.01);
+    PandaArmPlanningControl(double_t max_vel_scale = 0.01, double_t max_acc_scale = 0.01);
     ~PandaArmPlanningControl();
 
     bool GoHome();

@@ -1,8 +1,8 @@
 #include "include/robot/panda_arm_planning_control.h"
 
-PandaArmPlanningControl::PandaArmPlanningControl(ros::NodeHandle nh, std::string planning_group, double_t max_vel_scale, double_t max_acc_scale)
-: planning_group_(planning_group)
-, move_group_(planning_group)
+PandaArmPlanningControl::PandaArmPlanningControl(double_t max_vel_scale, double_t max_acc_scale)
+: planning_group_("panda_arm")
+, move_group_(planning_group_)
 {
     joint_model_group_ = move_group_.getCurrentState()->getJointModelGroup(planning_group_);
     move_group_.setMaxAccelerationScalingFactor(max_acc_scale);
