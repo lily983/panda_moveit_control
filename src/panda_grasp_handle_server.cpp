@@ -37,6 +37,8 @@
 
 #include <sound_play/sound_play.h>
 
+#include "include/robot/panda_gripper_control.h"
+
 #define PI 3.1415926
 typedef Eigen::Transform<double, 3, Eigen::Affine> T;
 
@@ -52,6 +54,7 @@ class PandaGraspHandleServer
     , moveit_visual_tools_("panda_link0")
     , planning_scene_interface_("", true)
     {
+        // GripperMoveAction(0.3);
         // std::cout << "1" << "\n";
         ss_grasp_handle_ = n.advertiseService("panda_grasp_handle", &PandaGraspHandleServer::callBackPandaGraspHandle, this);
 
@@ -90,32 +93,51 @@ class PandaGraspHandleServer
         // Opening-rotating
         // RotatingGraspInfo();
 
-        // Publish collision scene
-        planning_scene_diff_publisher_ = n.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
-        ros::WallDuration sleep_t(0.5);
-        while (planning_scene_diff_publisher_.getNumSubscribers() < 1)
-        {
-            sleep_t.sleep();
-            ROS_INFO("Wait for planning scene subscriber...");
-        }
+        // // Publish collision scene
+        // planning_scene_diff_publisher_ = n.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+        // ros::WallDuration sleep_t(0.5);
+        // while (planning_scene_diff_publisher_.getNumSubscribers() < 1)
+        // {
+        //     sleep_t.sleep();
+        //     ROS_INFO("Wait for planning scene subscriber...");
+        // }
 
-        n.getParam("/panda_grasp_handle_server/web_mesh_path", web_mesh_path_);
-        n.getParam("/panda_grasp_handle_server/repo_mesh_path", repo_mesh_path_);
-        std::cout << web_mesh_path_ << "\n";
-        std::cout << repo_mesh_path_ << "\n";
+        // n.getParam("/panda_grasp_handle_server/web_mesh_path", web_mesh_path_);
+        // n.getParam("/panda_grasp_handle_server/repo_mesh_path", repo_mesh_path_);
+        // std::cout << web_mesh_path_ << "\n";
+        // std::cout << repo_mesh_path_ << "\n";
 
-        std::string web_scene_path, web_obj_path, repo_scene_path, repo_obj_path;
-        web_scene_path = web_mesh_path_ + "/mesh_scene.obj";
-        web_obj_path = web_mesh_path_ + "/mesh_obj.obj";
-        repo_scene_path = repo_mesh_path_ + "/mesh_scene.obj";
-        repo_obj_path = repo_mesh_path_ + "/mesh_obj.obj";
+        // std::string web_scene_path, web_obj_path, repo_scene_path, repo_obj_path;
+        // web_scene_path = web_mesh_path_ + "/mesh_scene.obj";
+        // web_obj_path = web_mesh_path_ + "/mesh_obj.obj";
+        // repo_scene_path = repo_mesh_path_ + "/mesh_scene.obj";
+        // repo_obj_path = repo_mesh_path_ + "/mesh_obj.obj";
 
-        CopyMeshFromWebToRepo(web_scene_path, repo_scene_path);
+        // CopyMeshFromWebToRepo(web_scene_path, repo_scene_path);
 
-        CopyMeshFromWebToRepo(web_obj_path, repo_obj_path);
+        // CopyMeshFromWebToRepo(web_obj_path, repo_obj_path);
 
-        AddCollisionSceneMesh();
+        // AddCollisionSceneMesh();
         // AddCollisionObjMesh();
+
+        // ROS_INFO("Prepare to close finger !!!!!!!!!!!!!!!!");
+        // franka_gripper::MoveGoal move_goal;
+        // move_goal.width = 0.008;
+        // move_goal.speed = 0.03;
+        // moveAC.sendGoal(move_goal);
+        // if(moveAC.waitForResult(ros::Duration(20.0)))
+        // {
+        //     ROS_INFO("Franka gripper sucessfully complish move action.");
+        // }
+        // else
+        // {
+        //     ROS_ERROR("Franka gripper failed to complish move action.");
+        // }
+
+        // GripperHomingAction();
+        GripperMoveAction(0.008, 0.03);
+        GripperHomingAction();
+        GripperMoveAction(0.01, 0.03);
 
         
     }
@@ -784,24 +806,6 @@ class PandaGraspHandleServer
     void printPose(geometry_msgs::Pose pose){
         ROS_INFO("The position xyz is: [%f, %f, %f]",pose.position.x, pose.position.y, pose.position.z);
         ROS_INFO("The quaternion xyzw is: [%f, %f, %f, %f]", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
-    }
-
-    void armMove(geometry_msgs::Pose target_pose){
-        moveit::planning_interface::MoveGroupInterface::Plan  my_plan;
-        
-        const robot_state::JointModelGroup* joint_model_group =
-            move_group_.getCurrentState()->getJointModelGroup("panda_arm");
-
-        move_group_.setPoseTarget(target_pose);
-        bool success = (move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-        if(success)
-        {
-            moveit_visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
-            move_group_.move();
-        }
-        else{
-            ROS_INFO("Failed to find solution to move the arm to the target pose");
-        }
     }
 
     // Add table and obstacle to the planning scene
