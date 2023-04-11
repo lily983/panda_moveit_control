@@ -3,7 +3,6 @@
 PandaArmPlanningControl::PandaArmPlanningControl(ros::NodeHandle nh, std::string planning_group, double_t max_vel_scale, double_t max_acc_scale)
 : planning_group_(planning_group)
 , move_group_(planning_group)
-, planning_scene_(nh)
 {
     joint_model_group_ = move_group_.getCurrentState()->getJointModelGroup(planning_group_);
     move_group_.setMaxAccelerationScalingFactor(max_acc_scale);

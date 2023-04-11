@@ -32,10 +32,8 @@ class PandaArmPlanningControl
     bool ExecuteTrajectory(moveit_msgs::RobotTrajectory traj);
 
     private:
-    ros::NodeHandle nh_;
     std::string planning_group_;
     moveit::planning_interface::MoveGroupInterface move_group_;
     const moveit::core::JointModelGroup* joint_model_group_;
-    PlanningSceneOperation planning_scene_;
     const std::vector<double> home_config_;
 };
