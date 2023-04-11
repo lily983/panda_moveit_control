@@ -4,11 +4,13 @@ PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle nh)
 : nh_(nh)
 , moveit_visual_tools_("panda_link0")
 {
-    pub_trajectory_ = nh_.advertise<moveit_msgs::RobotTrajectory>("visualize_trajectory", 1);
-    pub_planning_scene_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+    pub_trajectory_ = nh_.advertise<moveit_msgs::RobotTrajectory>("/visualize_trajectory", 1);
+    pub_planning_scene_ = nh_.advertise<moveit_msgs::PlanningScene>("/move_group/monitored_planning_scene", 1, true);
     
     ROS_INFO("[MoveitPlanningScene]: finished initialization!");
 }
+
+PlanningSceneOperation::~PlanningSceneOperation(){}
 
 void PlanningSceneOperation::AddCollisionObj(std::string obj_name, std::string mesh_path, std::string header_frame)
 {
@@ -22,6 +24,7 @@ void PlanningSceneOperation::AddCollisionObj(std::string obj_name, std::string m
     // Add scene mesh
     collision_scene.meshes.resize(1);
     collision_scene.mesh_poses.resize(1);
+    collision_scene.mesh_poses.at(0).orientation.w =1;
     collision_scene.operation = moveit_msgs::CollisionObject::ADD;
 
     shapes::Mesh* scene_mesh = shapes::createMeshFromResource(mesh_path);
@@ -39,10 +42,6 @@ void PlanningSceneOperation::AddCollisionObj(std::string obj_name, std::string m
     ROS_INFO("Publish collision object %s to planning scene", obj_name.c_str());
 }
 
-void PlanningSceneOperation::AddCollisionObj(std::string obj_name, std::string mesh_path)
-{
-    AddCollisionObj(obj_name, mesh_path, "panda_link0");
-}
 
 void PlanningSceneOperation::RemoveCollisionObj(std::string obj_name, std::string header_frame)
 {
@@ -59,10 +58,6 @@ void PlanningSceneOperation::RemoveCollisionObj(std::string obj_name, std::strin
     ROS_INFO("Remove collision object %s in planning scene", obj_name.c_str());
 }
 
-void PlanningSceneOperation::RemoveCollisionObj(std::string obj_name)
-{
-    RemoveCollisionObj(obj_name, "panda_link0");
-}
 
 void PlanningSceneOperation::VisualizeTrajectory(moveit_msgs::DisplayTrajectory traj)
 {

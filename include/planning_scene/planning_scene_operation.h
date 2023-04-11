@@ -10,13 +10,9 @@ class PlanningSceneOperation{
     PlanningSceneOperation(ros::NodeHandle nh);
     ~PlanningSceneOperation();
 
-    void AddCollisionObj(std::string obj_name, std::string mesh_path, std::string header_frame);
+    void AddCollisionObj(std::string obj_name, std::string mesh_path, std::string header_frame = "panda_link0");
 
-    void AddCollisionObj(std::string obj_name, std::string mesh_path);
-
-    void RemoveCollisionObj(std::string obj_name, std::string header_frame);
-
-    void RemoveCollisionObj(std::string obj_name);
+    void RemoveCollisionObj(std::string obj_name, std::string header_frame = "panda_link0");
 
     void VisualizeTrajectory(moveit_msgs::DisplayTrajectory traj);
 

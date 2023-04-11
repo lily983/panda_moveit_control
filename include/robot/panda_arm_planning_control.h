@@ -7,12 +7,10 @@
 
 #include <math.h>
 
-#include "include/planning_scene/planning_scene_operation.h"
-
 class PandaArmPlanningControl
 {
     public:
-    PandaArmPlanningControl(double_t max_vel_scale = 0.01, double_t max_acc_scale = 0.01);
+    PandaArmPlanningControl(double max_vel_scale = 0.01, double max_acc_scale = 0.01);
     ~PandaArmPlanningControl();
 
     bool GoHome();
@@ -30,6 +28,8 @@ class PandaArmPlanningControl
     moveit_msgs::RobotTrajectory PlanningToPoseTarget(geometry_msgs::Pose pose_target, moveit::core::RobotState start_state);
 
     bool ExecuteTrajectory(moveit_msgs::RobotTrajectory traj);
+
+    moveit::core::RobotState GetMoveGroupState();
 
     private:
     std::string planning_group_;

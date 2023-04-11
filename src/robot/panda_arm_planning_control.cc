@@ -2,7 +2,7 @@
 
 PandaArmPlanningControl::PandaArmPlanningControl(double_t max_vel_scale, double_t max_acc_scale)
 : planning_group_("panda_arm")
-, move_group_(planning_group_)
+, move_group_("panda_arm")
 {
     joint_model_group_ = move_group_.getCurrentState()->getJointModelGroup(planning_group_);
     move_group_.setMaxAccelerationScalingFactor(max_acc_scale);
@@ -10,6 +10,8 @@ PandaArmPlanningControl::PandaArmPlanningControl(double_t max_vel_scale, double_
     home_config_[0.0, -M_PI/4, 0.0, -2*M_PI/3, 0.0, M_PI/3, M_PI/4];
     ROS_INFO("[PandaArmPlanningControl]: finished initialization!");
 }
+
+PandaArmPlanningControl::~PandaArmPlanningControl(){};
 
 bool PandaArmPlanningControl::GoHome()
 {
@@ -110,4 +112,8 @@ bool PandaArmPlanningControl::ExecuteTrajectory(moveit_msgs::RobotTrajectory tra
     return status;
 }
 
+moveit::core::RobotState PandaArmPlanningControl::GetMoveGroupState()
+{
+    return *(move_group_.getCurrentState());
+}
 

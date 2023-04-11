@@ -28,7 +28,6 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-find_package(Assimp REQUIRED all)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -100,7 +99,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES panda_moveit_control
-#  CATKIN_DEPENDS franka_ros joint_state_publisher message_generation moveit_core moveit_msgs moveit_ros_planning moveit_ros_planning_interface moveit_visual_tools robot_state_publis roscpp rospy std_msgs tf2 trajectory_msgs
+#  CATKIN_DEPENDS franka_gripper 
 #  DEPENDS system_lib
 )
 
@@ -116,16 +115,15 @@ include_directories(
 )
 
 ## Declare a C++ library
-add_library(${PROJECT_NAME}_planning_scene
+add_library(${PROJECT_NAME}_planning_scene_operation
   src/planning_scene/planning_scene_operation.cc
 )
-target_link_libraries(${PROJECT_NAME}_planning_scene
+target_link_libraries(${PROJECT_NAME}_planning_scene_operation
   ${catkin_LIBRARIES}
 )
 
 add_library(${PROJECT_NAME}_robot 
   src/robot/panda_arm_planning_control.cc
-  include/robot/panda_gripper_control.h
 )
 target_link_libraries(${PROJECT_NAME}_robot
   ${catkin_LIBRARIES}
@@ -135,6 +133,12 @@ target_link_libraries(${PROJECT_NAME}_robot
 add_executable(panda_grasp_handle_server src/panda_grasp_handle_server.cpp)
 target_link_libraries(panda_grasp_handle_server
   ${catkin_LIBRARIES}
-  ${Assimp_LIBRARIES}
   ${PROJECT_NAME}_robot
+)
+
+add_executable(test_class src/test_class.cc)
+target_link_libraries(test_class
+  ${catkin_LIBRARIES}
+  ${PROJECT_NAME}_robot
+  ${PROJECT_NAME}_planning_scene_operation
 )

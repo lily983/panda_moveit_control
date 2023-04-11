@@ -5,9 +5,9 @@
 #include <franka_gripper/HomingAction.h>
 
 
-bool GripperMoveAction(double width, double speed)
+bool GripperMoveAction(double width, double speed = 0.03)
 {
-    actionlib::SimpleActionClient<franka_gripper::MoveAction> move_ac("franka_gripper/move");
+    actionlib::SimpleActionClient<franka_gripper::MoveAction> move_ac("/franka_gripper/move");
     while(!move_ac.waitForServer(ros::Duration(5.0))){
         ROS_ERROR("Failed to wait for franka_gripper move server");
         return false;
@@ -28,12 +28,7 @@ bool GripperMoveAction(double width, double speed)
     return true;
 }
 
-bool GripperMoveAction(double width)
-{
-    return GripperMoveAction(width, 0.03);
-}
-
 bool GripperHomingAction()
 {
-    return GripperMoveAction(0.8, 0.05);
+    return GripperMoveAction(0.08, 0.05);
 }
