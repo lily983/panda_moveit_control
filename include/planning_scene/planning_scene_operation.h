@@ -12,7 +12,11 @@ class PlanningSceneOperation{
 
     void AddCollisionObj(std::string obj_name, std::string mesh_path, std::string header_frame = "panda_link0");
 
+    void AddCollisionObj(bool obj_or_scene);
+
     void RemoveCollisionObj(std::string obj_name, std::string header_frame = "panda_link0");
+
+    void RemoveCollisionObj(bool obj_or_scene);
 
     void VisualizeTrajectory(moveit_msgs::DisplayTrajectory traj);
 

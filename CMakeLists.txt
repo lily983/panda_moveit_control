@@ -27,59 +27,15 @@ find_package(catkin REQUIRED COMPONENTS
   sound_play
 )
 
-## System dependencies are found with CMake's conventions
-
-
-## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed
-## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
-
-################################################
-## Declare ROS messages, services and actions ##
-################################################
-
-## To declare and build messages, services or actions from within this
-## package, follow these steps:
-## * Let MSG_DEP_SET be the set of packages whose message types you use in
-##   your messages/services/actions (e.g. std_msgs, actionlib_msgs, ...).
-## * In the file package.xml:
-##   * add a build_depend tag for "message_generation"
-##   * add a build_depend and a exec_depend tag for each package in MSG_DEP_SET
-##   * If MSG_DEP_SET isn't empty the following dependency has been pulled in
-##     but can be declared for certainty nonetheless:
-##     * add a exec_depend tag for "message_runtime"
-## * In this file (CMakeLists.txt):
-##   * add "message_generation" and every package in MSG_DEP_SET to
-##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * add "message_runtime" and every package in MSG_DEP_SET to
-##     catkin_package(CATKIN_DEPENDS ...)
-##   * uncomment the add_*_files sections below as needed
-##     and list every .msg/.srv/.action file to be processed
-##   * uncomment the generate_messages entry below
-##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
-
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
-
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
   PandaGraspHandle.srv
   GraspHandleInfo.srv
   DisplayStompTraj.srv
+  ExecuteStompTraj.srv
 )
 
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -129,16 +85,84 @@ target_link_libraries(${PROJECT_NAME}_robot
   ${catkin_LIBRARIES}
 )
 
+add_library(ExecuteStompTraj
+  src/stomp/execute_stomp_traj.cc
+)
+target_link_libraries(ExecuteStompTraj
+  ${PROJECT_NAME}_robot
+  ${PROJECT_NAME}_planning_scene_operation
+)
+
+add_library(Pouring
+  src/stomp/pouring.cc
+)
+target_link_libraries(Pouring
+  ExecuteStompTraj
+)
+
+add_library(Transporting
+  src/stomp/transporting.cc
+)
+target_link_libraries(Transporting
+  ExecuteStompTraj
+)
+
+add_library(Scooping
+  src/stomp/scooping.cc
+)
+target_link_libraries(Scooping
+  ExecuteStompTraj
+)
+
+add_library(OpeningSliding
+  src/stomp/opening_sliding.cc
+)
+target_link_libraries(OpeningSliding
+  ExecuteStompTraj
+)
+
+add_library(OpeningRotating
+  src/stomp/opening_rotating.cc
+)
+target_link_libraries(OpeningRotating
+  ExecuteStompTraj
+)
+
+
 ## Declare a C++ executable
 add_executable(panda_grasp_handle_server src/panda_grasp_handle_server.cpp)
 target_link_libraries(panda_grasp_handle_server
-  ${catkin_LIBRARIES}
   ${PROJECT_NAME}_robot
 )
 
 add_executable(test_class src/test_class.cc)
 target_link_libraries(test_class
-  ${catkin_LIBRARIES}
   ${PROJECT_NAME}_robot
   ${PROJECT_NAME}_planning_scene_operation
 )
+
+add_executable(pouring_task_node src/stomp/pouring_task.cc)
+target_link_libraries(pouring_task_node
+  Pouring
+)
+
+add_executable(transporting_task_node src/stomp/transporting_task.cc)
+target_link_libraries(transporting_task_node
+  Transporting
+)
+
+add_executable(scooping_task_node src/stomp/scooping_task.cc)
+target_link_libraries(scooping_task_node
+  Scooping
+)
+
+add_executable(opening_sliding_task_node src/stomp/opening_sliding_task.cc)
+target_link_libraries(opening_sliding_task_node
+  OpeningSliding
+)
+
+add_executable(opening_rotating_task_node src/stomp/opening_rotating_task.cc)
+target_link_libraries(opening_rotating_task_node
+  OpeningRotating
+)
+

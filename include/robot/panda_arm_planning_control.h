@@ -21,11 +21,11 @@ class PandaArmPlanningControl
 
     moveit_msgs::RobotTrajectory PlanningToJointTarget(std::vector<double> joint_target);
 
-    moveit_msgs::RobotTrajectory PlanningToJointTarget(std::vector<double> joint_target, moveit::core::RobotState start_state);
+    moveit_msgs::RobotTrajectory PlanningToJointTarget(std::vector<double> joint_target, std::vector<double> start_joint_values);
 
     moveit_msgs::RobotTrajectory PlanningToPoseTarget(geometry_msgs::Pose pose_target);
 
-    moveit_msgs::RobotTrajectory PlanningToPoseTarget(geometry_msgs::Pose pose_target, moveit::core::RobotState start_state);
+    moveit_msgs::RobotTrajectory PlanningToPoseTarget(geometry_msgs::Pose pose_target, std::vector<double> start_joint_values);
 
     bool ExecuteTrajectory(moveit_msgs::RobotTrajectory traj);
 

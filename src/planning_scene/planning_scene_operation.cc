@@ -42,6 +42,17 @@ void PlanningSceneOperation::AddCollisionObj(std::string obj_name, std::string m
     ROS_INFO("Publish collision object %s to planning scene", obj_name.c_str());
 }
 
+void PlanningSceneOperation::AddCollisionObj(bool obj_or_scene)
+{
+    if(obj_or_scene == true){
+        ROS_INFO("Remove collision object mesh");
+        AddCollisionObj("collision_object", "package://panda_moveit_control/models/mesh_obj.obj");
+    }
+    else{
+        ROS_INFO("Add collision scene mesh");
+        AddCollisionObj("collision_scene", "package://panda_moveit_control/models/mesh_scene.obj");
+    }
+}
 
 void PlanningSceneOperation::RemoveCollisionObj(std::string obj_name, std::string header_frame)
 {
@@ -58,6 +69,17 @@ void PlanningSceneOperation::RemoveCollisionObj(std::string obj_name, std::strin
     ROS_INFO("Remove collision object %s in planning scene", obj_name.c_str());
 }
 
+void PlanningSceneOperation::RemoveCollisionObj(bool obj_or_scene)
+{
+    if(obj_or_scene == true){
+        ROS_INFO("Remove collision object mesh");
+        RemoveCollisionObj("collision_object");
+    }
+    else{
+        ROS_INFO("Remove collision scene mesh");
+        RemoveCollisionObj("collision_scene");
+    }
+}
 
 void PlanningSceneOperation::VisualizeTrajectory(moveit_msgs::DisplayTrajectory traj)
 {
