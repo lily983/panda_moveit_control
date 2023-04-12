@@ -107,6 +107,12 @@ target_link_libraries(Transporting
   ExecuteStompTraj
 )
 
+add_library(Scooping
+  src/stomp/scooping.cc
+)
+target_link_libraries(Scooping
+  ExecuteStompTraj
+)
 
 ## Declare a C++ executable
 add_executable(panda_grasp_handle_server src/panda_grasp_handle_server.cpp)
@@ -130,5 +136,8 @@ target_link_libraries(transporting_task_node
   Transporting
 )
 
-
+add_executable(scooping_task_node src/stomp/scooping_task.cc)
+target_link_libraries(scooping_task_node
+  Scooping
+)
 

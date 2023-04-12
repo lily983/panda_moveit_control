@@ -1,17 +1,17 @@
-#include "include/stomp/pouring.h"
+#include "include/stomp/scooping.h"
 
-Pouring::Pouring(ros::NodeHandle n)
+Scooping::Scooping(ros::NodeHandle n)
 : ExecuteStompTraj(n)
 {
-    ROS_INFO("===[Pouring]: finished initialization!===");
+    ROS_INFO("[Scooping]: finished initialization!");
 }
 
-Pouring::~Pouring(){};
+Scooping::~Scooping(){};
 
-bool Pouring::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::Request &req,
+bool Scooping::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::Request &req,
                                 panda_moveit_control::ExecuteStompTraj::Response &res)
 {
-    ROS_INFO("===Received request to execute STOMP trajectory for the pouring task!===");
+    ROS_INFO("===Received request to execute STOMP trajectory for the scooping task!===");
     if(all_stomp_trajectory_.trajectory.size() == 0){
         ROS_ERROR("Haven't received STOMP trajectroy ");
         res.success = false;
@@ -33,9 +33,9 @@ bool Pouring::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::R
         return false;
     }
 
-    ROS_INFO("===Reached to the start joint configuration. Please handover the pouring tool!===");
+    ROS_INFO("===Reached to the start joint configuration. Please handover the spoon!===");
     ros::Duration(5.0).sleep();
-    if(GripperMoveAction(0.055, 0.01)==false){
+    if(GripperMoveAction(0.008, 0.01)==false){
         ROS_WARN("===Franka gripper failed to execute move command!===");
     }
     ROS_INFO("===Ready to execute STOMP trajectory! Please leave the arm!===");
@@ -51,6 +51,3 @@ bool Pouring::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::R
     res.success = true;
     return true;
 }
-
-
-

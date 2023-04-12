@@ -12,9 +12,18 @@ bool Transporting::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTr
                                 panda_moveit_control::ExecuteStompTraj::Response &res)
 {
     ROS_INFO("===Received request to execute STOMP trajectory for the transporting task!===");
+    if(all_stomp_trajectory_.trajectory.size() == 0){
+        ROS_ERROR("Haven't received STOMP trajectroy ");
+        res.success = false;
+        return 0;
+    }
     stomp_trajectory_ = all_stomp_trajectory_.trajectory.at(req.num);
     trajectory_msgs::JointTrajectoryPoint stomp_first_point;
     stomp_first_point = stomp_trajectory_.joint_trajectory.points.at(0);
+
+    ROS_INFO("===Add collision scene and object to the planning scene===");
+    planning_scene_.AddCollisionObj(1);
+    planning_scene_.AddCollisionObj(0);
 
     ROS_INFO("===Move to the first joint configuration!!!===");
     ros::Duration(1.0).sleep();
