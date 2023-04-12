@@ -25,6 +25,7 @@ bool GripperMoveAction(double width, double speed = 0.03)
     {
         ROS_ERROR("Franka gripper failed to complish move action.");
     }
+    ros::Duration(1.0).sleep();
     return true;
 }
 

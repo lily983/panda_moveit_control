@@ -25,7 +25,7 @@ class ExecuteStompTraj
     virtual bool CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::Request &req,
                                 panda_moveit_control::ExecuteStompTraj::Response &res) = 0;
 
-    private:
+    protected:
     ros::NodeHandle n_;
     std::string web_mesh_path_;
     std::string repo_mesh_path_;
@@ -36,4 +36,7 @@ class ExecuteStompTraj
     ros::ServiceServer srv_execute_stomp_traj_;
     ros::Subscriber sub_trajectory_;
     ros::Publisher display_stomp_traj_publisher_;
+
+    PlanningSceneOperation planning_scene_;
+    PandaArmPlanningControl panda_arm_;
 };

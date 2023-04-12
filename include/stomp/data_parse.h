@@ -6,6 +6,7 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2/exceptions.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 
 void CopyMeshFromWebToRepo(std::string web_path, std::string repo_path)
 {
@@ -31,4 +32,21 @@ geometry_msgs::TransformStamped ReadHandleMarker(std::string marker_name="handle
     }
 
     return tf_world2marker;
+}
+
+void PubPoseToStaticTF(geometry_msgs::Pose pose, std::string name, std::string header_frame = "panda_link0")
+{
+    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+    geometry_msgs::TransformStamped tf;
+    tf.transform.rotation = pose.orientation;
+    tf.transform.translation.x = pose.position.x;
+    tf.transform.translation.y = pose.position.y;
+    tf.transform.translation.z = pose.position.z;
+
+    tf.header.frame_id = header_frame;
+    tf.header.stamp = ros::Time::now();
+    tf.child_frame_id = name;
+
+    static_broadcaster.sendTransform(tf);
+    ROS_INFO("Publish tf from %s to %s", header_frame.c_str(), name.c_str());
 }

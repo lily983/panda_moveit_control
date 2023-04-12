@@ -2,6 +2,7 @@
 
 ExecuteStompTraj::ExecuteStompTraj(ros::NodeHandle n)
 : n_(n)
+, planning_scene_(n_)
 {
     StoreMeshToRepo();
 
