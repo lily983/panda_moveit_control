@@ -114,6 +114,15 @@ target_link_libraries(Scooping
   ExecuteStompTraj
 )
 
+add_library(OpeningSliding
+  src/stomp/opening_sliding.cc
+)
+target_link_libraries(OpeningSliding
+  ExecuteStompTraj
+)
+
+
+
 ## Declare a C++ executable
 add_executable(panda_grasp_handle_server src/panda_grasp_handle_server.cpp)
 target_link_libraries(panda_grasp_handle_server
@@ -139,5 +148,10 @@ target_link_libraries(transporting_task_node
 add_executable(scooping_task_node src/stomp/scooping_task.cc)
 target_link_libraries(scooping_task_node
   Scooping
+)
+
+add_executable(opening_sliding_task_node src/stomp/opening_sliding_task.cc)
+target_link_libraries(opening_sliding_task_node
+  OpeningSliding
 )
 

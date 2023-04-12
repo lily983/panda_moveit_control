@@ -45,14 +45,17 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(std:
     return result_traj;
 }
 
-moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(std::vector<double> joint_target, moveit::core::RobotState start_state)
+moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(std::vector<double> joint_target, std::vector<double> start_joint_values)
 {
     moveit_msgs::RobotTrajectory result_traj;
 
     moveit::core::RobotStatePtr backup_state;
     backup_state = move_group_.getCurrentState();
 
-    move_group_.setStartState(start_state);
+    moveit::core::RobotStatePtr start_state = move_group_.getCurrentState();
+    start_state->setJointGroupPositions(joint_model_group_, start_joint_values);
+
+    move_group_.setStartState(*start_state);
     result_traj = PlanningToJointTarget(joint_target);
     if(result_traj.joint_trajectory.points.size() == 0){
         ROS_ERROR("Failed to find path from the given start state to target joint configuration!");
@@ -79,15 +82,17 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(geome
     return result_traj;
 }
 
-moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(geometry_msgs::Pose pose_target, moveit::core::RobotState start_state)
+moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(geometry_msgs::Pose pose_target, std::vector<double> start_joint_values)
 
 {
     moveit_msgs::RobotTrajectory result_traj;
-
     moveit::core::RobotStatePtr backup_state;
     backup_state = move_group_.getCurrentState();
+    
+    moveit::core::RobotStatePtr start_state = move_group_.getCurrentState();
+    start_state->setJointGroupPositions(joint_model_group_, start_joint_values);
 
-    move_group_.setStartState(start_state);
+    move_group_.setStartState(*start_state);
     result_traj = PlanningToPoseTarget(pose_target);
     if(result_traj.joint_trajectory.points.size() == 0){
         ROS_ERROR("Failed to find path from the given start state to target pose!");
