@@ -6,7 +6,7 @@ Transporting::Transporting(ros::NodeHandle n)
     ROS_INFO("===[Transporting]: finished initialization!===");
 }
 
-Transporting::~Transporting(){};
+Transporting::~Transporting(){}
 
 bool Transporting::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::Request &req,
                                 panda_moveit_control::ExecuteStompTraj::Response &res)

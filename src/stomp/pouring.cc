@@ -6,7 +6,7 @@ Pouring::Pouring(ros::NodeHandle n)
     ROS_INFO("===[Pouring]: finished initialization!===");
 }
 
-Pouring::~Pouring(){};
+Pouring::~Pouring(){}
 
 bool Pouring::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::Request &req,
                                 panda_moveit_control::ExecuteStompTraj::Response &res)

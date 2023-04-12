@@ -121,6 +121,12 @@ target_link_libraries(OpeningSliding
   ExecuteStompTraj
 )
 
+add_library(OpeningRotating
+  src/stomp/opening_rotating.cc
+)
+target_link_libraries(OpeningRotating
+  ExecuteStompTraj
+)
 
 
 ## Declare a C++ executable
@@ -153,5 +159,10 @@ target_link_libraries(scooping_task_node
 add_executable(opening_sliding_task_node src/stomp/opening_sliding_task.cc)
 target_link_libraries(opening_sliding_task_node
   OpeningSliding
+)
+
+add_executable(opening_rotating_task_node src/stomp/opening_rotating_task.cc)
+target_link_libraries(opening_rotating_task_node
+  OpeningRotating
 )
 

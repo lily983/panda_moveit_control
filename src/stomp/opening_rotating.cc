@@ -1,18 +1,19 @@
-#include "include/stomp/opening_sliding.h"
+#include "include/stomp/opening_rotating.h"
 
-OpeningSliding::OpeningSliding(ros::NodeHandle n)
+OpeningRotating::OpeningRotating(ros::NodeHandle n)
 : ExecuteStompTraj(n)
 {
     GenerateGraspPose(ReadHandleMarker("handle_marker"));
-    ROS_INFO("[OpeningSliding]: finished initialization!");
+    ROS_INFO("[OpeningRotating]: finished initialization!");
 }
 
-OpeningSliding::~OpeningSliding(){}
+OpeningRotating::~OpeningRotating(){}
 
-bool OpeningSliding::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::Request &req,
+
+bool OpeningRotating::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::Request &req,
                                 panda_moveit_control::ExecuteStompTraj::Response &res)
 {
-    ROS_INFO("===Received request to execute STOMP trajectory for the OpeningSliding task!===");
+    ROS_INFO("===Received request to execute STOMP trajectory for the OpeningRotating task!===");
     if(all_stomp_trajectory_.trajectory.size() == 0){
         ROS_ERROR("Haven't received STOMP trajectroy ");
         res.success = false;
@@ -70,21 +71,55 @@ bool OpeningSliding::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStomp
     return true;
 }
 
-void OpeningSliding::GenerateGraspPose(const geometry_msgs::TransformStamped tf_world_to_marker)
+void OpeningRotating::GenerateGraspPose(const geometry_msgs::TransformStamped tf_world_to_marker)
 {
     T ei_marker_to_grasp, ei_marker_to_pregrasp, ei_marker_to_postgrasp;
 
     Eigen::Quaterniond quat_marker_to_grasp(0.0001, -0.3832, 0.9237, 0.001);
     ei_marker_to_grasp = Eigen::Translation3d(Eigen::Vector3d(0.0, 0.0, 0.083))*quat_marker_to_grasp.normalized().toRotationMatrix();
-    ei_marker_to_pregrasp = Eigen::Translation3d(Eigen::Vector3d(0.0, 0.0, 0.183))*quat_marker_to_grasp.normalized().toRotationMatrix();
-    ei_marker_to_postgrasp = Eigen::Translation3d(Eigen::Vector3d(0.0, 0.13, 0.083))*quat_marker_to_grasp.normalized().toRotationMatrix();
+    ei_marker_to_pregrasp = Eigen::Translation3d(Eigen::Vector3d(0.0, 0.0, 0.283))*quat_marker_to_grasp.normalized().toRotationMatrix();
+    ei_marker_to_postgrasp = Eigen::Translation3d(Eigen::Vector3d(0.0, 0.0, 0.083))*quat_marker_to_grasp.normalized().toRotationMatrix();
 
     T ei_world_to_marker, ei_world_to_grasp, ei_world_to_pregrasp, ei_world_to_postgrasp;
 
     tf::transformMsgToEigen(tf_world_to_marker.transform, ei_world_to_marker);
     ei_world_to_grasp = ei_world_to_marker * ei_marker_to_grasp;
     ei_world_to_pregrasp = ei_world_to_marker * ei_marker_to_pregrasp;
-    ei_world_to_postgrasp = ei_world_to_marker * ei_marker_to_postgrasp;
+
+    T ei_marker_start_to_goal;
+    std::string object, mode, rotation_radius_param_name, rotation_angle_param_name;
+    ros::param::get("~object", object);
+    ros::param::get("~mode", mode);
+    rotation_radius_param_name = mode + "/" + object + "/rotation_radius";
+    rotation_angle_param_name = mode + "/" + object + "/rotation_angle";
+
+    std::cout << rotation_radius_param_name << "\n";
+    std::float_t radius, angle;
+    n_.getParam(rotation_radius_param_name, radius);
+    n_.getParam(rotation_angle_param_name, angle);
+
+    angle = -angle * M_PI / 180;
+    std::cout << "Mode is " << mode << ", radius is " << radius << ", angle is " << angle << "\n";
+
+    if(object=="sink_door")
+    {
+        ei_marker_start_to_goal.matrix() << std::cos(angle), -std::sin(angle), 0, radius*(1 - std::cos(angle)),
+                                    std::sin(angle), std::cos(angle), 0, -radius*std::sin(angle),
+                                    0, 0, 1, 0,
+                                    0, 0, 0, 1;
+    }
+    else{
+        ei_marker_start_to_goal.matrix() << 1, 0, 0, 0,
+                                    0, std::cos(angle), -std::sin(angle), radius*std::sin(-angle),
+                                    0, std::sin(angle), std::cos(angle), -radius*(1-std::cos(-angle)),
+                                    0, 0, 0, 1;
+    }
+
+    T ei_world_to_marker_goal;
+    ei_world_to_marker_goal =  ei_world_to_marker * ei_marker_start_to_goal;
+
+    ei_world_to_postgrasp = ei_world_to_marker_goal * ei_marker_to_postgrasp;
+
     tf::poseEigenToMsg(ei_world_to_grasp, grasp_pose_);
     tf::poseEigenToMsg(ei_world_to_pregrasp, pre_grasp_pose_);
     tf::poseEigenToMsg(ei_world_to_postgrasp, post_grasp_pose_);
@@ -95,4 +130,7 @@ void OpeningSliding::GenerateGraspPose(const geometry_msgs::TransformStamped tf_
 
     ROS_INFO("===Finished generating grasp pose, pre-grasp pose, and post-grasp pose!===");
 }
+
+
+
 

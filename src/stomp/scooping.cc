@@ -6,7 +6,7 @@ Scooping::Scooping(ros::NodeHandle n)
     ROS_INFO("[Scooping]: finished initialization!");
 }
 
-Scooping::~Scooping(){};
+Scooping::~Scooping(){}
 
 bool Scooping::CallbackExecuteStompTraj(panda_moveit_control::ExecuteStompTraj::Request &req,
                                 panda_moveit_control::ExecuteStompTraj::Response &res)
