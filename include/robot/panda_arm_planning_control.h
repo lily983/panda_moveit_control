@@ -10,24 +10,24 @@
 class PandaArmPlanningControl
 {
     public:
-    PandaArmPlanningControl(double max_vel_scale = 0.01, double max_acc_scale = 0.01);
+    PandaArmPlanningControl(const double max_vel_scale = 0.01, const double max_acc_scale = 0.01);
     ~PandaArmPlanningControl();
 
     bool GoHome();
 
-    bool MoveToJointTarget(std::vector<double> joint_target);
+    bool MoveToJointTarget(const std::vector<double> joint_target);
 
-    bool MoveToPoseTarget(geometry_msgs::Pose pose_target);
+    bool MoveToPoseTarget(const geometry_msgs::Pose pose_target);
 
-    moveit_msgs::RobotTrajectory PlanningToJointTarget(std::vector<double> joint_target);
+    moveit_msgs::RobotTrajectory PlanningToJointTarget(const std::vector<double> joint_target);
 
-    moveit_msgs::RobotTrajectory PlanningToJointTarget(std::vector<double> joint_target, std::vector<double> start_joint_values);
+    moveit_msgs::RobotTrajectory PlanningToJointTarget(const std::vector<double> joint_target, const std::vector<double> start_joint_values);
 
-    moveit_msgs::RobotTrajectory PlanningToPoseTarget(geometry_msgs::Pose pose_target);
+    moveit_msgs::RobotTrajectory PlanningToPoseTarget(const geometry_msgs::Pose pose_target);
 
-    moveit_msgs::RobotTrajectory PlanningToPoseTarget(geometry_msgs::Pose pose_target, std::vector<double> start_joint_values);
+    moveit_msgs::RobotTrajectory PlanningToPoseTarget(const geometry_msgs::Pose pose_target, const std::vector<double> start_joint_values);
 
-    bool ExecuteTrajectory(moveit_msgs::RobotTrajectory traj);
+    bool ExecuteTrajectory(const moveit_msgs::RobotTrajectory traj);
 
     moveit::core::RobotState GetMoveGroupState();
 

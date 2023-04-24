@@ -5,7 +5,7 @@
 #include <franka_gripper/HomingAction.h>
 
 
-bool GripperMoveAction(double width, double speed = 0.03)
+bool GripperMoveAction(const double width, const double speed = 0.03)
 {
     actionlib::SimpleActionClient<franka_gripper::MoveAction> move_ac("/franka_gripper/move");
     while(!move_ac.waitForServer(ros::Duration(5.0))){

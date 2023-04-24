@@ -7,8 +7,9 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2/exceptions.h>
 #include <tf2_ros/static_transform_broadcaster.h>
+#include <geometry_msgs/Pose.h>
 
-void CopyMeshFromWebToRepo(std::string web_path, std::string repo_path)
+void CopyMeshFromWebToRepo(const std::string web_path, const std::string repo_path)
 {
     if(std::filesystem::exists(repo_path)){
         std::filesystem::remove(repo_path);
@@ -16,7 +17,7 @@ void CopyMeshFromWebToRepo(std::string web_path, std::string repo_path)
     std::filesystem::copy_file(web_path, repo_path);
 }
 
-geometry_msgs::TransformStamped ReadHandleMarker(std::string marker_name="handle_marker")
+geometry_msgs::TransformStamped ReadHandleMarker(const std::string marker_name="handle_marker")
 {
     ROS_INFO("Read handle marker pose");
     geometry_msgs::TransformStamped tf_world2marker;
@@ -34,7 +35,7 @@ geometry_msgs::TransformStamped ReadHandleMarker(std::string marker_name="handle
     return tf_world2marker;
 }
 
-void PubPoseToStaticTF(geometry_msgs::Pose pose, std::string name, std::string header_frame = "panda_link0")
+void PubPoseToStaticTF(const geometry_msgs::Pose pose, const std::string name, const std::string header_frame = "panda_link0")
 {
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped tf;
