@@ -28,9 +28,11 @@ void PlanningSceneOperation::AddCollisionObj(const std::string& obj_name,
     collision_scene.mesh_poses.at(0).orientation.w = 1;
     collision_scene.operation = moveit_msgs::CollisionObject::ADD;
 
-    shapes::Mesh* scene_mesh = shapes::createMeshFromResource(mesh_path);
+    shapes::Mesh* scene_mesh = new shapes::Mesh;
+    scene_mesh = shapes::createMeshFromResource(mesh_path);
     shapes::ShapeMsg scene_mesh_msg;
     shapes::constructMsgFromShape(scene_mesh, scene_mesh_msg);
+    delete scene_mesh;
 
     shape_msgs::Mesh scene_mesh_moveit =
         boost::get<shape_msgs::Mesh>(scene_mesh_msg);
@@ -82,17 +84,17 @@ void PlanningSceneOperation::RemoveCollisionObj(const bool obj_or_scene) {
 }
 
 void PlanningSceneOperation::VisualizeTrajectory(
-    const moveit_msgs::DisplayTrajectory& traj) {
-    int16_t num_attempt = 0;
-    while (pub_trajectory_.getNumSubscribers() < 1 && num_attempt < 5) {
+    const moveit_msgs::DisplayTrajectory& traj, const int max_num_attempt) {
+    int16_t trail = 0;
+    while (pub_trajectory_.getNumSubscribers()!=0 && trail < max_num_attempt) {
         ROS_WARN(
             "No subscriber to visualize trajectory, check if Rviz subscribe "
             "the "
             "topic visualize_trajectory...");
         ros::Duration(1.0).sleep();
-        num_attempt += 1;
+        trail += 1;
     }
-    if (num_attempt < 5) {
+    if (trail < max_num_attempt) {
         pub_trajectory_.publish(traj);
         ROS_INFO("Published trajectory to Rviz for visualization");
     } else {
