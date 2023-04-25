@@ -14,7 +14,7 @@ typedef Eigen::Transform<double, 3, Eigen::Affine> T;
 
 class ExecuteStompTraj {
   public:
-    ExecuteStompTraj(ros::NodeHandle n);
+    ExecuteStompTraj(ros::NodeHandle& n);
     ~ExecuteStompTraj();
 
   protected:

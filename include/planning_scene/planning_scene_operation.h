@@ -7,7 +7,7 @@
 
 class PlanningSceneOperation {
   public:
-    PlanningSceneOperation(const ros::NodeHandle nh);
+    PlanningSceneOperation(ros::NodeHandle& nh);
     ~PlanningSceneOperation();
 
     void AddCollisionObj(const std::string& obj_name,

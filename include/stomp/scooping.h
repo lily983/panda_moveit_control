@@ -2,7 +2,7 @@
 
 class Scooping : public ExecuteStompTraj {
   public:
-    Scooping(ros::NodeHandle n);
+    Scooping(ros::NodeHandle& n);
     ~Scooping();
 
   protected:

@@ -1,6 +1,6 @@
 #include "include/stomp/opening_sliding.h"
 
-OpeningSliding::OpeningSliding(ros::NodeHandle n) : ExecuteStompTraj(n) {
+OpeningSliding::OpeningSliding(ros::NodeHandle& n) : ExecuteStompTraj(n) {
     GenerateGraspPose(ReadHandleMarker("handle_marker"));
     ROS_INFO("[OpeningSliding]: finished initialization!");
 }

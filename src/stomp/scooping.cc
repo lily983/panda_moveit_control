@@ -1,6 +1,6 @@
 #include "include/stomp/scooping.h"
 
-Scooping::Scooping(ros::NodeHandle n) : ExecuteStompTraj(n) {
+Scooping::Scooping(ros::NodeHandle& n) : ExecuteStompTraj(n) {
     ROS_INFO("[Scooping]: finished initialization!");
 }
 

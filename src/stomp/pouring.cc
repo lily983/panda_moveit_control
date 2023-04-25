@@ -1,6 +1,6 @@
 #include "include/stomp/pouring.h"
 
-Pouring::Pouring(ros::NodeHandle n) : ExecuteStompTraj(n) {
+Pouring::Pouring(ros::NodeHandle& n) : ExecuteStompTraj(n) {
     ROS_INFO("===[Pouring]: finished initialization!===");
 }
 

@@ -2,7 +2,7 @@
 
 class OpeningRotating : public ExecuteStompTraj {
   public:
-    OpeningRotating(ros::NodeHandle n);
+    OpeningRotating(ros::NodeHandle& n);
     ~OpeningRotating();
 
   protected:

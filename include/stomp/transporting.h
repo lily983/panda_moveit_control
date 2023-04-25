@@ -2,7 +2,7 @@
 
 class Transporting : public ExecuteStompTraj {
   public:
-    Transporting(ros::NodeHandle n);
+    Transporting(ros::NodeHandle& n);
     ~Transporting();
 
   protected:

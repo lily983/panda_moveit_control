@@ -1,7 +1,7 @@
 #include "include/stomp/execute_stomp_traj.h"
 
-ExecuteStompTraj::ExecuteStompTraj(ros::NodeHandle n)
-    : n_(n), planning_scene_(n_) {
+ExecuteStompTraj::ExecuteStompTraj(ros::NodeHandle& n)
+    : n_(n), planning_scene_(n) {
     StoreMeshToRepo();
 
     ros::param::get("~stomp_traj_topic", stomp_traj_topic_);

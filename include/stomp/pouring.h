@@ -2,7 +2,7 @@
 
 class Pouring : public ExecuteStompTraj {
   public:
-    Pouring(ros::NodeHandle n);
+    Pouring(ros::NodeHandle& n);
     ~Pouring();
 
   protected:

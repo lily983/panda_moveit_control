@@ -1,6 +1,6 @@
 #include "include/stomp/transporting.h"
 
-Transporting::Transporting(ros::NodeHandle n) : ExecuteStompTraj(n) {
+Transporting::Transporting(ros::NodeHandle& n) : ExecuteStompTraj(n) {
     ROS_INFO("===[Transporting]: finished initialization!===");
 }
 

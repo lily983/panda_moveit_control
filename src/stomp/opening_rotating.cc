@@ -1,6 +1,6 @@
 #include "include/stomp/opening_rotating.h"
 
-OpeningRotating::OpeningRotating(ros::NodeHandle n) : ExecuteStompTraj(n) {
+OpeningRotating::OpeningRotating(ros::NodeHandle& n) : ExecuteStompTraj(n) {
     GenerateGraspPose(ReadHandleMarker("handle_marker"));
     ROS_INFO("[OpeningRotating]: finished initialization!");
 }

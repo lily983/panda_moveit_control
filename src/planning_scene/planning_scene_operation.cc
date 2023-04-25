@@ -1,6 +1,6 @@
 #include "include/planning_scene/planning_scene_operation.h"
 
-PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle nh)
+PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle& nh)
     : nh_(nh), moveit_visual_tools_("panda_link0") {
     pub_trajectory_ =
         nh_.advertise<moveit_msgs::RobotTrajectory>("/visualize_trajectory", 1);

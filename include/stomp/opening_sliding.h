@@ -2,7 +2,7 @@
 
 class OpeningSliding : public ExecuteStompTraj {
   public:
-    OpeningSliding(ros::NodeHandle n);
+    OpeningSliding(ros::NodeHandle& n);
     ~OpeningSliding();
 
   protected:
