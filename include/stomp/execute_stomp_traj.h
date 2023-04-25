@@ -17,6 +17,7 @@ class ExecuteStompTraj {
     ExecuteStompTraj(ros::NodeHandle n);
     ~ExecuteStompTraj();
 
+  protected:
     void StoreMeshToRepo();
     void CallbackStompTraj(const moveit_msgs::DisplayTrajectoryPtr& msg);
     bool CallBackDisplayStompTraj(
@@ -26,7 +27,6 @@ class ExecuteStompTraj {
         panda_moveit_control::ExecuteStompTraj::Request& req,
         panda_moveit_control::ExecuteStompTraj::Response& res) = 0;
 
-  protected:
     ros::NodeHandle n_;
     std::string web_mesh_path_;
     std::string repo_mesh_path_;
