@@ -12,9 +12,9 @@ PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle nh)
 
 PlanningSceneOperation::~PlanningSceneOperation() {}
 
-void PlanningSceneOperation::AddCollisionObj(std::string obj_name,
-                                             std::string mesh_path,
-                                             std::string header_frame) {
+void PlanningSceneOperation::AddCollisionObj(const std::string& obj_name,
+                         const std::string& mesh_path,
+                         const std::string& header_frame) {
     moveit_msgs::PlanningScene planning_scene;
 
     moveit_msgs::CollisionObject collision_scene;
@@ -44,7 +44,7 @@ void PlanningSceneOperation::AddCollisionObj(std::string obj_name,
     ROS_INFO("Publish collision object %s to planning scene", obj_name.c_str());
 }
 
-void PlanningSceneOperation::AddCollisionObj(bool obj_or_scene) {
+void PlanningSceneOperation::AddCollisionObj(const bool obj_or_scene) {
     if (obj_or_scene == true) {
         ROS_INFO("Remove collision object mesh");
         AddCollisionObj("collision_object",
@@ -56,8 +56,8 @@ void PlanningSceneOperation::AddCollisionObj(bool obj_or_scene) {
     }
 }
 
-void PlanningSceneOperation::RemoveCollisionObj(std::string obj_name,
-                                                std::string header_frame) {
+void PlanningSceneOperation::RemoveCollisionObj(const std::string& obj_name,
+                            const std::string& header_frame) {
     moveit_msgs::CollisionObject remove_object;
     remove_object.id = obj_name;
     remove_object.header.frame_id = header_frame;
@@ -71,7 +71,7 @@ void PlanningSceneOperation::RemoveCollisionObj(std::string obj_name,
     ROS_INFO("Remove collision object %s in planning scene", obj_name.c_str());
 }
 
-void PlanningSceneOperation::RemoveCollisionObj(bool obj_or_scene) {
+void PlanningSceneOperation::RemoveCollisionObj(const bool obj_or_scene) {
     if (obj_or_scene == true) {
         ROS_INFO("Remove collision object mesh");
         RemoveCollisionObj("collision_object");
@@ -82,7 +82,7 @@ void PlanningSceneOperation::RemoveCollisionObj(bool obj_or_scene) {
 }
 
 void PlanningSceneOperation::VisualizeTrajectory(
-    moveit_msgs::DisplayTrajectory traj) {
+    const moveit_msgs::DisplayTrajectory& traj) {
     int16_t num_attempt = 0;
     while (pub_trajectory_.getNumSubscribers() < 1 && num_attempt < 5) {
         ROS_WARN(

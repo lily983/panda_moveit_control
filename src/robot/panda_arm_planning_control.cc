@@ -19,17 +19,17 @@ bool PandaArmPlanningControl::GoHome() {
 }
 
 bool PandaArmPlanningControl::MoveToJointTarget(
-    std::vector<double> joint_target) {
+    const std::vector<double>& joint_target) {
     return ExecuteTrajectory(PlanningToJointTarget(joint_target));
 }
 
 bool PandaArmPlanningControl::MoveToPoseTarget(
-    geometry_msgs::Pose pose_target) {
+    const geometry_msgs::Pose& pose_target) {
     return ExecuteTrajectory(PlanningToPoseTarget(pose_target));
 }
 
 moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(
-    std::vector<double> joint_target) {
+    const std::vector<double>& joint_target) {
     moveit_msgs::RobotTrajectory result_traj;
     move_group_.setJointValueTarget(joint_target);
     moveit::planning_interface::MoveGroupInterface::Plan moveit_plan;
@@ -44,7 +44,8 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(
 }
 
 moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(
-    std::vector<double> joint_target, std::vector<double> start_joint_values) {
+    const std::vector<double>& joint_target,
+        const std::vector<double>& start_joint_values) {
     moveit_msgs::RobotTrajectory result_traj;
 
     moveit::core::RobotStatePtr backup_state;
@@ -67,7 +68,7 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(
 }
 
 moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(
-    geometry_msgs::Pose pose_target) {
+    const geometry_msgs::Pose& pose_target) {
     moveit_msgs::RobotTrajectory result_traj;
     move_group_.setPoseTarget(pose_target);
     moveit::planning_interface::MoveGroupInterface::Plan moveit_plan;
@@ -82,8 +83,8 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(
 }
 
 moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(
-    geometry_msgs::Pose pose_target, std::vector<double> start_joint_values)
-
+    const geometry_msgs::Pose& pose_target,
+        const std::vector<double>& start_joint_values)
 {
     moveit_msgs::RobotTrajectory result_traj;
     moveit::core::RobotStatePtr backup_state;
@@ -105,7 +106,7 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(
 }
 
 bool PandaArmPlanningControl::ExecuteTrajectory(
-    moveit_msgs::RobotTrajectory traj) {
+    const moveit_msgs::RobotTrajectory& traj) {
     bool status = true;
     if (move_group_.execute(traj) == moveit::core::MoveItErrorCode::SUCCESS) {
         ROS_INFO("Finished executing robot trajectory");

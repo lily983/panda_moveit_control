@@ -15,25 +15,25 @@ class PandaArmPlanningControl {
 
     bool GoHome();
 
-    bool MoveToJointTarget(const std::vector<double> joint_target);
+    bool MoveToJointTarget(const std::vector<double>& joint_target);
 
-    bool MoveToPoseTarget(const geometry_msgs::Pose pose_target);
-
-    moveit_msgs::RobotTrajectory PlanningToJointTarget(
-        const std::vector<double> joint_target);
+    bool MoveToPoseTarget(const geometry_msgs::Pose& pose_target);
 
     moveit_msgs::RobotTrajectory PlanningToJointTarget(
-        const std::vector<double> joint_target,
-        const std::vector<double> start_joint_values);
+        const std::vector<double>& joint_target);
+
+    moveit_msgs::RobotTrajectory PlanningToJointTarget(
+        const std::vector<double>& joint_target,
+        const std::vector<double>& start_joint_values);
 
     moveit_msgs::RobotTrajectory PlanningToPoseTarget(
-        const geometry_msgs::Pose pose_target);
+        const geometry_msgs::Pose& pose_target);
 
     moveit_msgs::RobotTrajectory PlanningToPoseTarget(
-        const geometry_msgs::Pose pose_target,
-        const std::vector<double> start_joint_values);
+        const geometry_msgs::Pose& pose_target,
+        const std::vector<double>& start_joint_values);
 
-    bool ExecuteTrajectory(const moveit_msgs::RobotTrajectory traj);
+    bool ExecuteTrajectory(const moveit_msgs::RobotTrajectory& traj);
 
     moveit::core::RobotState GetMoveGroupState();
 

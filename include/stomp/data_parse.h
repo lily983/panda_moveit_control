@@ -9,8 +9,8 @@
 #include <filesystem>
 #include <string>
 
-void CopyMeshFromWebToRepo(const std::string web_path,
-                           const std::string repo_path) {
+void CopyMeshFromWebToRepo(const std::string& web_path,
+                           const std::string& repo_path) {
     if (std::filesystem::exists(repo_path)) {
         std::filesystem::remove(repo_path);
     }
@@ -18,7 +18,7 @@ void CopyMeshFromWebToRepo(const std::string web_path,
 }
 
 geometry_msgs::TransformStamped ReadHandleMarker(
-    const std::string marker_name = "handle_marker") {
+    const std::string& marker_name = "handle_marker") {
     ROS_INFO("Read handle marker pose");
     geometry_msgs::TransformStamped tf_world2marker;
     tf2_ros::Buffer tf2_buffer;
@@ -33,8 +33,8 @@ geometry_msgs::TransformStamped ReadHandleMarker(
     return tf_world2marker;
 }
 
-void PubPoseToStaticTF(const geometry_msgs::Pose pose, const std::string name,
-                       const std::string header_frame = "panda_link0") {
+void PubPoseToStaticTF(const geometry_msgs::Pose& pose, const std::string& name,
+                       const std::string& header_frame = "panda_link0") {
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped tf;
     tf.transform.rotation = pose.orientation;

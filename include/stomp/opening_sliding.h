@@ -9,7 +9,7 @@ class OpeningSliding : ExecuteStompTraj {
         panda_moveit_control::ExecuteStompTraj::Response& res);
 
     void GenerateGraspPose(
-        const geometry_msgs::TransformStamped tf_world_to_marker);
+        const geometry_msgs::TransformStamped& tf_world_to_marker);
 
   private:
     geometry_msgs::Pose grasp_pose_;

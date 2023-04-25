@@ -75,7 +75,7 @@ bool OpeningRotating::CallbackExecuteStompTraj(
 }
 
 void OpeningRotating::GenerateGraspPose(
-    const geometry_msgs::TransformStamped tf_world_to_marker) {
+    const geometry_msgs::TransformStamped& tf_world_to_marker) {
     T ei_marker_to_grasp, ei_marker_to_pregrasp, ei_marker_to_postgrasp;
 
     Eigen::Quaterniond quat_marker_to_grasp(0.0001, -0.3832, 0.9237, 0.001);
