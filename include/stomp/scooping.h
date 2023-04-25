@@ -4,7 +4,8 @@ class Scooping : public ExecuteStompTraj {
   public:
     Scooping(ros::NodeHandle n);
     ~Scooping();
-    protected:
+
+  protected:
     bool CallbackExecuteStompTraj(
         panda_moveit_control::ExecuteStompTraj::Request& req,
         panda_moveit_control::ExecuteStompTraj::Response& res);

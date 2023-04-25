@@ -4,7 +4,8 @@ class Transporting : public ExecuteStompTraj {
   public:
     Transporting(ros::NodeHandle n);
     ~Transporting();
-    protected:
+
+  protected:
     bool CallbackExecuteStompTraj(
         panda_moveit_control::ExecuteStompTraj::Request& req,
         panda_moveit_control::ExecuteStompTraj::Response& res);
