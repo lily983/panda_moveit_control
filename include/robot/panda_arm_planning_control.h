@@ -8,38 +8,38 @@
 #include <math.h>
 
 class PandaArmPlanningControl {
- public:
-  PandaArmPlanningControl(const double max_vel_scale = 0.01,
-                          const double max_acc_scale = 0.01);
-  ~PandaArmPlanningControl();
+  public:
+    PandaArmPlanningControl(const double max_vel_scale = 0.01,
+                            const double max_acc_scale = 0.01);
+    ~PandaArmPlanningControl();
 
-  bool GoHome();
+    bool GoHome();
 
-  bool MoveToJointTarget(const std::vector<double> joint_target);
+    bool MoveToJointTarget(const std::vector<double>& joint_target);
 
-  bool MoveToPoseTarget(const geometry_msgs::Pose pose_target);
+    bool MoveToPoseTarget(const geometry_msgs::Pose& pose_target);
 
-  moveit_msgs::RobotTrajectory PlanningToJointTarget(
-      const std::vector<double> joint_target);
+    moveit_msgs::RobotTrajectory PlanningToJointTarget(
+        const std::vector<double>& joint_target);
 
-  moveit_msgs::RobotTrajectory PlanningToJointTarget(
-      const std::vector<double> joint_target,
-      const std::vector<double> start_joint_values);
+    moveit_msgs::RobotTrajectory PlanningToJointTarget(
+        const std::vector<double>& joint_target,
+        const std::vector<double>& start_joint_values);
 
-  moveit_msgs::RobotTrajectory PlanningToPoseTarget(
-      const geometry_msgs::Pose pose_target);
+    moveit_msgs::RobotTrajectory PlanningToPoseTarget(
+        const geometry_msgs::Pose& pose_target);
 
-  moveit_msgs::RobotTrajectory PlanningToPoseTarget(
-      const geometry_msgs::Pose pose_target,
-      const std::vector<double> start_joint_values);
+    moveit_msgs::RobotTrajectory PlanningToPoseTarget(
+        const geometry_msgs::Pose& pose_target,
+        const std::vector<double>& start_joint_values);
 
-  bool ExecuteTrajectory(const moveit_msgs::RobotTrajectory traj);
+    bool ExecuteTrajectory(const moveit_msgs::RobotTrajectory& traj);
 
-  moveit::core::RobotState GetMoveGroupState();
+    moveit::core::RobotState GetMoveGroupState();
 
- private:
-  std::string planning_group_;
-  moveit::planning_interface::MoveGroupInterface move_group_;
-  const moveit::core::JointModelGroup* joint_model_group_;
-  const std::vector<double> home_config_;
+  private:
+    std::string planning_group_;
+    moveit::planning_interface::MoveGroupInterface move_group_;
+    const moveit::core::JointModelGroup* joint_model_group_;
+    const std::vector<double> home_config_;
 };
