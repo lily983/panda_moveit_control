@@ -74,7 +74,7 @@ include_directories(
 add_library(${PROJECT_NAME}_planning_scene_operation src/planning_scene/planning_scene_operation.cc)
 target_link_libraries(${PROJECT_NAME}_planning_scene_operation ${catkin_LIBRARIES})
 
-add_library(${PROJECT_NAME}_robot src/robot/panda_arm_planning_control.cc)
+add_library(${PROJECT_NAME}_robot src/robot/panda_arm_planning_control.cc src/robot/panda_gripper_control.cc)
 target_link_libraries(${PROJECT_NAME}_robot ${catkin_LIBRARIES})
 
 add_library(ExecuteStompTraj src/stomp/execute_stomp_traj.cc)
