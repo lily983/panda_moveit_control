@@ -12,7 +12,7 @@ ExecuteStompTraj::ExecuteStompTraj(ros::NodeHandle n)
 
     srv_display_stomp_traj_ =
         n_.advertiseService("display_stomp_traj",
-                            &ExecuteStompTraj::CallBackDisplayStompTraj, this);
+                            &ExecuteStompTraj::CallbackDisplayStompTraj, this);
     display_stomp_traj_publisher_ =
         n.advertise<moveit_msgs::DisplayTrajectory>("display_target_traj", 1);
 
@@ -42,7 +42,7 @@ void ExecuteStompTraj::CallbackStompTraj(
     all_stomp_trajectory_ = *msg;
 }
 
-bool ExecuteStompTraj::CallBackDisplayStompTraj(
+bool ExecuteStompTraj::CallbackDisplayStompTraj(
     panda_moveit_control::DisplayStompTraj::Request& req,
     panda_moveit_control::DisplayStompTraj::Response& res) {
     moveit_msgs::DisplayTrajectory display_traj;

@@ -20,7 +20,7 @@ class ExecuteStompTraj {
   protected:
     void StoreMeshToRepo();
     void CallbackStompTraj(const moveit_msgs::DisplayTrajectoryPtr& msg);
-    bool CallBackDisplayStompTraj(
+    bool CallbackDisplayStompTraj(
         panda_moveit_control::DisplayStompTraj::Request& req,
         panda_moveit_control::DisplayStompTraj::Response& res);
     virtual bool CallbackExecuteStompTraj(
