@@ -13,8 +13,8 @@ PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle nh)
 PlanningSceneOperation::~PlanningSceneOperation() {}
 
 void PlanningSceneOperation::AddCollisionObj(const std::string& obj_name,
-                         const std::string& mesh_path,
-                         const std::string& header_frame) {
+                                             const std::string& mesh_path,
+                                             const std::string& header_frame) {
     moveit_msgs::PlanningScene planning_scene;
 
     moveit_msgs::CollisionObject collision_scene;
@@ -58,8 +58,8 @@ void PlanningSceneOperation::AddCollisionObj(const bool obj_or_scene) {
     }
 }
 
-void PlanningSceneOperation::RemoveCollisionObj(const std::string& obj_name,
-                            const std::string& header_frame) {
+void PlanningSceneOperation::RemoveCollisionObj(
+    const std::string& obj_name, const std::string& header_frame) {
     moveit_msgs::CollisionObject remove_object;
     remove_object.id = obj_name;
     remove_object.header.frame_id = header_frame;
@@ -86,7 +86,8 @@ void PlanningSceneOperation::RemoveCollisionObj(const bool obj_or_scene) {
 void PlanningSceneOperation::VisualizeTrajectory(
     const moveit_msgs::DisplayTrajectory& traj, const int max_num_attempt) {
     int16_t trail = 0;
-    while (pub_trajectory_.getNumSubscribers()!=0 && trail < max_num_attempt) {
+    while (pub_trajectory_.getNumSubscribers() != 0 &&
+           trail < max_num_attempt) {
         ROS_WARN(
             "No subscriber to visualize trajectory, check if Rviz subscribe "
             "the "

@@ -21,7 +21,8 @@ class PlanningSceneOperation {
 
     void RemoveCollisionObj(const bool obj_or_scene);
 
-    void VisualizeTrajectory(const moveit_msgs::DisplayTrajectory& traj, const int max_num_attempt=5);
+    void VisualizeTrajectory(const moveit_msgs::DisplayTrajectory& traj,
+                             const int max_num_attempt = 5);
 
   protected:
     ros::NodeHandle nh_;
