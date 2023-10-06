@@ -34,6 +34,9 @@ add_service_files(
   GraspHandleInfo.srv
   DisplayStompTraj.srv
   ExecuteStompTraj.srv
+  VisualizeStompTraj.srv
+  AddCollisionMesh.srv
+  RemoveCollisionMesh.srv
 )
 
 # # Generate added messages and services with any dependencies listed here
@@ -66,6 +69,7 @@ catkin_package(
 # # Specify additional locations of header files
 # # Your package locations should be listed before other locations
 include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}
 )
@@ -81,21 +85,25 @@ add_library(ExecuteStompTraj src/stomp/execute_stomp_traj.cc)
 target_link_libraries(ExecuteStompTraj ${PROJECT_NAME}_robot
                                        ${PROJECT_NAME}_planning_scene_operation)
 
-add_library(Pouring src/stomp/pouring.cc)
-target_link_libraries(Pouring ExecuteStompTraj)
+# add_library(Pouring src/stomp/pouring.cc)
+# target_link_libraries(Pouring ExecuteStompTraj)
 
-add_library(Transporting src/stomp/transporting.cc)
-target_link_libraries(Transporting ExecuteStompTraj)
+# add_library(Transporting src/stomp/transporting.cc)
+# target_link_libraries(Transporting ExecuteStompTraj)
 
-add_library(Scooping src/stomp/scooping.cc)
-target_link_libraries(Scooping ExecuteStompTraj)
+# add_library(Scooping src/stomp/scooping.cc)
+# target_link_libraries(Scooping ExecuteStompTraj)
 
-add_library(OpeningSliding src/stomp/opening_sliding.cc)
-target_link_libraries(OpeningSliding ExecuteStompTraj)
+# add_library(OpeningSliding src/stomp/opening_sliding.cc)
+# target_link_libraries(OpeningSliding ExecuteStompTraj)
 
-add_library(OpeningRotating src/stomp/opening_rotating.cc)
-target_link_libraries(OpeningRotating ExecuteStompTraj)
+# add_library(OpeningRotating src/stomp/opening_rotating.cc)
+# target_link_libraries(OpeningRotating ExecuteStompTraj)
 
 # # Declare a C++ executable
 add_executable(panda_grasp_handle_server src/panda_grasp_handle_server.cpp)
 target_link_libraries(panda_grasp_handle_server ${PROJECT_NAME}_robot)
+
+add_executable(operate_planning_scene src/operate_planning_scene.cpp)
+target_link_libraries(operate_planning_scene ${PROJECT_NAME}_robot
+                                             ${PROJECT_NAME}_planning_scene_operation)
