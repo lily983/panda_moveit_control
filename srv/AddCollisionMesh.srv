@@ -1,0 +1,4 @@
+string collsion_obj_name
+string mesh_path
+---
+bool success
