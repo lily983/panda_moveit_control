@@ -45,7 +45,7 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(
 
 moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(
     const std::vector<double>& joint_target,
-        const std::vector<double>& start_joint_values) {
+    const std::vector<double>& start_joint_values) {
     moveit_msgs::RobotTrajectory result_traj;
 
     moveit::core::RobotStatePtr backup_state;
@@ -84,8 +84,7 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(
 
 moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(
     const geometry_msgs::Pose& pose_target,
-        const std::vector<double>& start_joint_values)
-{
+    const std::vector<double>& start_joint_values) {
     moveit_msgs::RobotTrajectory result_traj;
     moveit::core::RobotStatePtr backup_state;
     backup_state = move_group_.getCurrentState();

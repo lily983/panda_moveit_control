@@ -3,7 +3,7 @@
     <arg name="motion_primitive" default="pouring"/>
     <arg name="mode" default="default" />
     <arg name="object" default="red_laddle"/>
-    <arg name="trail_id" default="default" />
+    <arg name="trail_id" default="" />
 
     <group if="$(eval arg('motion_primitive') == 'opening')">
         <rosparam command="load" file="$(find primp)/config/opening_prior_knowledge.yaml" />
