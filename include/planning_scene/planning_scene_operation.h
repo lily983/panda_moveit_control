@@ -83,6 +83,14 @@ class PlanningSceneOperation {
         panda_moveit_control::VisualizeStompTraj::Request& req,
         panda_moveit_control::VisualizeStompTraj::Response& res);
 
+    /**
+     * \brief Receive and store moveit_msgs::DisplayTrajectory
+     * published by stomp
+     *
+     * \param msg
+     */
+    void CallbackStompTraj(const moveit_msgs::DisplayTrajectoryPtr& msg);
+
   private:
     ros::NodeHandle nh_;
     moveit_visual_tools::MoveItVisualTools moveit_visual_tools_;
@@ -91,4 +99,6 @@ class PlanningSceneOperation {
     ros::ServiceServer srv_visualize_stomp_trajectory_;
     ros::ServiceServer srv_add_collision_mesh_;
     ros::ServiceServer srv_remove_collision_mesh_;
+    moveit_msgs::DisplayTrajectory all_stomp_trajectory_;
+    ros::Subscriber sub_trajectory_;
 };

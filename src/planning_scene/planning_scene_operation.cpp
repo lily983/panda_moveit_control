@@ -2,6 +2,11 @@
 
 PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle& nh)
     : nh_(nh), moveit_visual_tools_("panda_link0") {
+    // Subscribe stomp trajectory
+    std::string stomp_traj_topic =
+        "/server_stomp_planning/display_planned_path";
+    sub_trajectory_ = nh_.subscribe(
+        stomp_traj_topic, 1, &PlanningSceneOperation::CallbackStompTraj, this);
     // Publish trajectory to rviz
     pub_trajectory_ =
         nh_.advertise<moveit_msgs::RobotTrajectory>("/visualize_trajectory", 1);
@@ -124,10 +129,13 @@ bool PlanningSceneOperation::CallbackVisualizeStompTraj(
     panda_moveit_control::VisualizeStompTraj::Response& res) {
     ROS_INFO("Visualize %d th STOMP trajectory.... ", req.nth_traj);
     // VisualizeTrajectory();
-    moveit_msgs::DisplayTrajectoryConstPtr ptr_stomp_traj =
-        ros::topic::waitForMessage<moveit_msgs::DisplayTrajectory>(
-            req.stomp_traj_name, ros::Duration(3));
-    if (ptr_stomp_traj == NULL) {
+    moveit_msgs::DisplayTrajectory visualize_stomp_traj;
+    visualize_stomp_traj.trajectory.at(0) =
+        all_stomp_trajectory_.trajectory.at(req.nth_traj);
+    visualize_stomp_traj.model_id = all_stomp_trajectory_.model_id;
+    visualize_stomp_traj.trajectory_start =
+        all_stomp_trajectory_.trajectory_start;
+    if (visualize_stomp_traj.trajectory.size() == 0) {
         ROS_ERROR(
             "Failed to get STOMP planned path topic, unable to display "
             "trajectory!!!!");
@@ -136,12 +144,7 @@ bool PlanningSceneOperation::CallbackVisualizeStompTraj(
     }
 
     ROS_INFO("Publish the %d th STOMP trajectory to rviz....", req.nth_traj);
-    moveit_msgs::DisplayTrajectory nth_stomp_traj;
-    nth_stomp_traj.trajectory.push_back(
-        ptr_stomp_traj->trajectory[req.nth_traj]);
-    nth_stomp_traj.trajectory_start = ptr_stomp_traj->trajectory_start;
-    nth_stomp_traj.model_id = ptr_stomp_traj->model_id;
-    pub_trajectory_.publish(nth_stomp_traj);
+    pub_trajectory_.publish(visualize_stomp_traj);
 
     return true;
 }
@@ -164,4 +167,9 @@ bool PlanningSceneOperation::CallbackRemoveCollisionMesh(
              req.collsion_obj_name.c_str());
     RemoveCollisionMesh(req.collsion_obj_name, "panda_link0");
     return true;
+}
+
+void PlanningSceneOperation::CallbackStompTraj(
+    const moveit_msgs::DisplayTrajectoryPtr& msg) {
+    all_stomp_trajectory_ = *msg;
 }
