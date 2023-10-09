@@ -9,8 +9,8 @@
 
 class PandaArmPlanningControl {
   public:
-    PandaArmPlanningControl(const double max_vel_scale = 0.01,
-                            const double max_acc_scale = 0.01);
+    PandaArmPlanningControl(const double max_vel_scale = 0.1,
+                            const double max_acc_scale = 0.05);
     ~PandaArmPlanningControl();
 
     bool GoHome();
@@ -41,5 +41,6 @@ class PandaArmPlanningControl {
     std::string planning_group_;
     moveit::planning_interface::MoveGroupInterface move_group_;
     const moveit::core::JointModelGroup* joint_model_group_;
-    const std::vector<double> home_config_;
+    const std::vector<double> home_config_ = {
+        0.0, -M_PI / 4, 0.0, -3 * M_PI / 4, 0.0, M_PI / 2, M_PI / 4};
 };
