@@ -75,30 +75,14 @@ include_directories(
 )
 
 # # Declare a C++ library
-add_library(${PROJECT_NAME}_planning_scene_operation src/planning_scene/planning_scene_operation.cc)
+add_library(${PROJECT_NAME}_planning_scene_operation src/planning_scene/planning_scene_operation.cpp)
 target_link_libraries(${PROJECT_NAME}_planning_scene_operation ${catkin_LIBRARIES})
 
-add_library(${PROJECT_NAME}_robot src/robot/panda_arm_planning_control.cc src/robot/panda_gripper_control.cc)
+add_library(${PROJECT_NAME}_robot src/robot/panda_arm_planning_control.cpp src/robot/panda_gripper_control.cpp)
 target_link_libraries(${PROJECT_NAME}_robot ${catkin_LIBRARIES})
 
-add_library(ExecuteStompTraj src/stomp/execute_stomp_traj.cc)
-target_link_libraries(ExecuteStompTraj ${PROJECT_NAME}_robot
-                                       ${PROJECT_NAME}_planning_scene_operation)
-
-# add_library(Pouring src/stomp/pouring.cc)
-# target_link_libraries(Pouring ExecuteStompTraj)
-
-# add_library(Transporting src/stomp/transporting.cc)
-# target_link_libraries(Transporting ExecuteStompTraj)
-
-# add_library(Scooping src/stomp/scooping.cc)
-# target_link_libraries(Scooping ExecuteStompTraj)
-
-# add_library(OpeningSliding src/stomp/opening_sliding.cc)
-# target_link_libraries(OpeningSliding ExecuteStompTraj)
-
-# add_library(OpeningRotating src/stomp/opening_rotating.cc)
-# target_link_libraries(OpeningRotating ExecuteStompTraj)
+add_library(${PROJECT_NAME}_execute_stomp src/stomp/execute_stomp_traj.cpp)
+target_link_libraries(${PROJECT_NAME}_execute_stomp ${catkin_LIBRARIES})
 
 # # Declare a C++ executable
 add_executable(panda_grasp_handle_server src/panda_grasp_handle_server.cpp)
@@ -110,3 +94,8 @@ target_link_libraries(operate_planning_scene ${PROJECT_NAME}_robot
 
 add_executable(test_panda_class src/test_panda_class.cpp)
 target_link_libraries(test_panda_class ${PROJECT_NAME}_robot)
+
+add_executable(scooping src/scooping.cpp)
+target_link_libraries(scooping ${PROJECT_NAME}_robot
+                               ${PROJECT_NAME}_planning_scene_operation
+                               ${PROJECT_NAME}_execute_stomp)
