@@ -107,3 +107,6 @@ target_link_libraries(panda_grasp_handle_server ${PROJECT_NAME}_robot)
 add_executable(operate_planning_scene src/operate_planning_scene.cpp)
 target_link_libraries(operate_planning_scene ${PROJECT_NAME}_robot
                                              ${PROJECT_NAME}_planning_scene_operation)
+
+add_executable(test_panda_class src/test_panda_class.cpp)
+target_link_libraries(test_panda_class ${PROJECT_NAME}_robot)
