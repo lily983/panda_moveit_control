@@ -1,0 +1,15 @@
+<launch>
+    <arg name="motion_primitive" default="scooping" />
+    <arg name="object" default="red_bowl_1"/>
+    <arg name="execute_num_th_trajectory" />
+    <arg name="stomp_trajectory_topic" defaule="/server_stomp_planning/display_planned_path" />
+
+    <param name="motion_primitive" value="$(arg motion_primitive)" type="string" />
+    <param name="object" value="$(arg object)" type="string" />
+    <param name="execute_num_th_trajectory" value="$(arg execute_num_th_trajectory)" type="int" />
+    <param name="stomp_trajectory_topic" value="$(arg stomp_trajectory_topic)" type="string" />
+
+    <node name="scooping" pkg="panda_moveit_control" type="scooping" output="screen" />
+
+
+</launch>
