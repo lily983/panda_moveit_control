@@ -12,13 +12,12 @@ bool GripperMoveAction(const double width, const double speed) {
     move_goal.speed = speed;
     ROS_INFO("Prepare to move gripper!");
     move_ac.sendGoal(move_goal);
-    if (move_ac.waitForResult(ros::Duration(20.0))) {
+    if (move_ac.waitForResult(ros::Duration(8.0))) {
         ROS_INFO("Franka gripper sucessfully complish move to distance %f.",
                  width);
     } else {
         ROS_ERROR("Franka gripper failed to complish move action.");
     }
-    ros::Duration(1.0).sleep();
     return true;
 }
 
