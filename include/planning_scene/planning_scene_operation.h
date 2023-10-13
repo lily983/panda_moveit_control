@@ -38,11 +38,9 @@ class PlanningSceneOperation {
      * \brief Add mesh formatted collision object/scene from planning scene
      *
      * \param obj_name
-     * \param mesh_path
      * \param header_frame
      */
     void AddCollisionMesh(const std::string& obj_name,
-                          const std::string& mesh_path,
                           const std::string& header_frame = "world");
 
     /**

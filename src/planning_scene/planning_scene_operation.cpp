@@ -2,14 +2,18 @@
 
 PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle& nh)
     : nh_(nh), moveit_visual_tools_("panda_link0") {
-    // Subscribe stomp trajectory
-    std::string stomp_traj_topic =
-        "/server_stomp_planning/display_planned_path";
+    // Subscribe stomp planned trajectory
+    std::string stomp_traj_topic;
+    nh_.getParam("stomp_trajectory_topic", stomp_traj_topic);
     sub_trajectory_ = nh_.subscribe(
         stomp_traj_topic, 1, &PlanningSceneOperation::CallbackStompTraj, this);
-    // Publish trajectory to rviz
-    pub_trajectory_ =
-        nh_.advertise<moveit_msgs::RobotTrajectory>("/visualize_trajectory", 1);
+
+    // Publish the target execution trajectory to rviz
+    std::string piblish_stomp_trajectory_topic;
+    nh_.getParam("publish_stomp_trajectory_topic",
+                 piblish_stomp_trajectory_topic);
+    pub_trajectory_ = nh_.advertise<moveit_msgs::DisplayTrajectory>(
+        piblish_stomp_trajectory_topic, 1);
 
     // Operate planning scene
     pub_planning_scene_ = nh_.advertise<moveit_msgs::PlanningScene>(
@@ -34,7 +38,6 @@ PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle& nh)
 PlanningSceneOperation::~PlanningSceneOperation() {}
 
 void PlanningSceneOperation::AddCollisionMesh(const std::string& obj_name,
-                                              const std::string& mesh_path,
                                               const std::string& header_frame) {
     moveit_msgs::PlanningScene planning_scene;
 
@@ -50,7 +53,17 @@ void PlanningSceneOperation::AddCollisionMesh(const std::string& obj_name,
     collision_scene.operation = moveit_msgs::CollisionObject::ADD;
 
     shapes::Mesh* scene_mesh = new shapes::Mesh;
+    std::string mesh_path;
+    mesh_path = "package://panda_moveit_control/models/" + obj_name + ".obj";
     scene_mesh = shapes::createMeshFromResource(mesh_path);
+    if (scene_mesh == NULL) {
+        ROS_ERROR(
+            "!!!No mesh file named %s.obj exists in folder /models, please add "
+            "its mesh file to /models before adding it to planning scene!!!",
+            obj_name.c_str());
+        return;
+    }
+
     shapes::ShapeMsg scene_mesh_msg;
     shapes::constructMsgFromShape(scene_mesh, scene_mesh_msg);
     delete scene_mesh;
@@ -67,18 +80,6 @@ void PlanningSceneOperation::AddCollisionMesh(const std::string& obj_name,
     ROS_INFO("Publish collision object %s to planning scene", obj_name.c_str());
 }
 
-// void PlanningSceneOperation::AddCollisionObj(const bool obj_or_scene) {
-//     if (obj_or_scene == true) {
-//         ROS_INFO("Remove collision object mesh");
-//         AddCollisionObj("collision_object",
-//                         "package://panda_moveit_control/models/mesh_obj.obj");
-//     } else {
-//         ROS_INFO("Add collision scene mesh");
-//         AddCollisionObj("collision_scene",
-//                         "package://panda_moveit_control/models/mesh_scene.obj");
-//     }
-// }
-
 void PlanningSceneOperation::RemoveCollisionMesh(
     const std::string& obj_name, const std::string& header_frame) {
     moveit_msgs::CollisionObject remove_object;
@@ -93,16 +94,6 @@ void PlanningSceneOperation::RemoveCollisionMesh(
     pub_planning_scene_.publish(planning_scene);
     ROS_INFO("Remove collision object %s in planning scene", obj_name.c_str());
 }
-
-// void PlanningSceneOperation::RemoveCollisionObj(const bool obj_or_scene) {
-//     if (obj_or_scene == true) {
-//         ROS_INFO("Remove collision object mesh");
-//         RemoveCollisionObj("collision_object");
-//     } else {
-//         ROS_INFO("Remove collision scene mesh");
-//         RemoveCollisionObj("collision_scene");
-//     }
-// }
 
 void PlanningSceneOperation::VisualizeTrajectory(
     const moveit_msgs::DisplayTrajectory& traj, const int max_num_attempt) {
@@ -128,10 +119,10 @@ bool PlanningSceneOperation::CallbackVisualizeStompTraj(
     panda_moveit_control::VisualizeStompTraj::Request& req,
     panda_moveit_control::VisualizeStompTraj::Response& res) {
     ROS_INFO("Visualize %d th STOMP trajectory.... ", req.nth_traj);
-    // VisualizeTrajectory();
+
     moveit_msgs::DisplayTrajectory visualize_stomp_traj;
-    visualize_stomp_traj.trajectory.at(0) =
-        all_stomp_trajectory_.trajectory.at(req.nth_traj);
+    visualize_stomp_traj.trajectory.push_back(
+        all_stomp_trajectory_.trajectory.at(req.nth_traj));
     visualize_stomp_traj.model_id = all_stomp_trajectory_.model_id;
     visualize_stomp_traj.trajectory_start =
         all_stomp_trajectory_.trajectory_start;
@@ -155,8 +146,8 @@ bool PlanningSceneOperation::CallbackAddCollisionMesh(
     ROS_INFO(
         "Add mesh-formatted collision object named as %s into planning "
         "scene....",
-        req.collsion_obj_name.c_str());
-    AddCollisionMesh(req.collsion_obj_name, req.mesh_path, "panda_link0");
+        req.mesh_collision_name.c_str());
+    AddCollisionMesh(req.mesh_collision_name, "panda_link0");
     return true;
 }
 
@@ -164,8 +155,8 @@ bool PlanningSceneOperation::CallbackRemoveCollisionMesh(
     panda_moveit_control::RemoveCollisionMesh::Request& req,
     panda_moveit_control::RemoveCollisionMesh::Response& res) {
     ROS_INFO("Remove collision object named as %s from planning scene....",
-             req.collsion_obj_name.c_str());
-    RemoveCollisionMesh(req.collsion_obj_name, "panda_link0");
+             req.mesh_collision_name.c_str());
+    RemoveCollisionMesh(req.mesh_collision_name, "panda_link0");
     return true;
 }
 

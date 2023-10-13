@@ -1,3 +1,3 @@
-string collsion_obj_name
+string mesh_collision_name
 ---
 bool success
