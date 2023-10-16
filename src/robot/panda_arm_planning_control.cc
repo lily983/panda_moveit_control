@@ -7,7 +7,6 @@ PandaArmPlanningControl::PandaArmPlanningControl(double_t max_vel_scale,
         move_group_.getCurrentState()->getJointModelGroup(planning_group_);
     move_group_.setMaxAccelerationScalingFactor(max_acc_scale);
     move_group_.setMaxVelocityScalingFactor(max_vel_scale);
-    home_config_[0.0, -M_PI / 4, 0.0, -2 * M_PI / 3, 0.0, M_PI / 3, M_PI / 4];
     ROS_INFO("[PandaArmPlanningControl]: finished initialization!");
 }
 
@@ -31,14 +30,21 @@ bool PandaArmPlanningControl::MoveToPoseTarget(
 moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(
     const std::vector<double>& joint_target) {
     moveit_msgs::RobotTrajectory result_traj;
-    move_group_.setJointValueTarget(joint_target);
+    std::cout << "Joint target is: "
+              << "\n";
+    for (auto joint_i : joint_target) std::cout << joint_i << "\n";
+    if (move_group_.setJointValueTarget(joint_target) == false) {
+        ROS_ERROR("!!!!!Failed to set to joint value target!!!!!");
+        return result_traj;
+    }
+
     moveit::planning_interface::MoveGroupInterface::Plan moveit_plan;
     if (move_group_.plan(moveit_plan) ==
         moveit::planning_interface::MoveItErrorCode::SUCCESS) {
         ROS_INFO("Succefully planning to target joint configuration...");
         result_traj = moveit_plan.trajectory_;
     } else {
-        ROS_ERROR("Failed to plan to target joint configuration!");
+        ROS_ERROR("!!!Failed to plan to target joint configuration!!!");
     }
     return result_traj;
 }
@@ -70,7 +76,13 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToJointTarget(
 moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(
     const geometry_msgs::Pose& pose_target) {
     moveit_msgs::RobotTrajectory result_traj;
-    move_group_.setPoseTarget(pose_target);
+    std::cout << "The target pose is: "
+              << "\n";
+    std::cout << pose_target << "\n";
+    if (move_group_.setPoseTarget(pose_target, "panda_link8") == false) {
+        ROS_ERROR("!!!Failed to set to pose target!!!");
+        return result_traj;
+    }
     moveit::planning_interface::MoveGroupInterface::Plan moveit_plan;
     if (move_group_.plan(moveit_plan) ==
         moveit::planning_interface::MoveItErrorCode::SUCCESS) {
@@ -96,7 +108,8 @@ moveit_msgs::RobotTrajectory PandaArmPlanningControl::PlanningToPoseTarget(
     result_traj = PlanningToPoseTarget(pose_target);
     if (result_traj.joint_trajectory.points.size() == 0) {
         ROS_ERROR(
-            "Failed to find path from the given start state to target pose!");
+            "Failed to find path from the given start state to target "
+            "pose!");
     }
 
     move_group_.setStartState(*backup_state);
