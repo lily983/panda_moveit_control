@@ -30,8 +30,6 @@ class ExecuteStompTraj {
     /**
      * \brief Receive and store moveit_msgs::DisplayTrajectory
      * published by stomp
-     *
-     * \param msg
      */
     void CallbackStompTraj(const moveit_msgs::DisplayTrajectoryPtr& msg);
 
