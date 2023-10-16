@@ -1,5 +1,5 @@
 <launch>
-    <arg name="web_mesh_path" default="/home/xiaoli/Dropbox/primp_exp/imagination" />
+    <arg name="web_mesh_path" default="$(find panda_moveit_control)/web_mesh_folder" />
     <arg name="motion_primitive" default="scooping" />
     <arg name="object" default="red_bowl_1"/>
     <arg name="stomp_trajectory_topic" default="/server_stomp_planning/display_planned_path" />
