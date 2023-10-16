@@ -2,7 +2,8 @@
 
 ExecuteStompTraj::ExecuteStompTraj(ros::NodeHandle& n) : n_(n) {
     n_.getParam("stomp_trajectory_topic", stomp_traj_topic_);
-    std::cout << stomp_traj_topic_ << "\n";
+    ROS_INFO("Subscribed to stomp trjaectory topic which name is %s",
+             stomp_traj_topic_.c_str());
     sub_trajectory_ = n_.subscribe(stomp_traj_topic_, 1,
                                    &ExecuteStompTraj::CallbackStompTraj, this);
     ROS_INFO("Subscribe to STOMP trojectory in topic named %s",

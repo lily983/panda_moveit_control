@@ -22,6 +22,11 @@ int main(int argc, char** argv) {
     std::cout << repo_mesh_scene << "\n";
     std::cout << repo_mesh_object << "\n";
 
+    ROS_INFO("web mesh scene path is %s", web_mesh_scene.c_str());
+    ROS_INFO("web mesh object path is %s", web_mesh_object.c_str());
+    ROS_INFO("repo mesh scene path is %s", repo_mesh_scene.c_str());
+    ROS_INFO("repo mesh object path is %s", repo_mesh_object.c_str());
+
     CopyMeshFromWebToRepo(web_mesh_scene, repo_mesh_scene);
     CopyMeshFromWebToRepo(web_mesh_object, repo_mesh_object);
 
