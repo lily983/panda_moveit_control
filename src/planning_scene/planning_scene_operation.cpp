@@ -9,11 +9,11 @@ PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle& nh)
         stomp_traj_topic, 1, &PlanningSceneOperation::CallbackStompTraj, this);
 
     // Publish the target execution trajectory to rviz
-    std::string piblish_stomp_trajectory_topic;
+    std::string publish_stomp_trajectory_topic;
     nh_.getParam("publish_stomp_trajectory_topic",
-                 piblish_stomp_trajectory_topic);
+                 publish_stomp_trajectory_topic);
     pub_trajectory_ = nh_.advertise<moveit_msgs::DisplayTrajectory>(
-        piblish_stomp_trajectory_topic, 1);
+        publish_stomp_trajectory_topic, 1);
 
     // Operate planning scene
     pub_planning_scene_ = nh_.advertise<moveit_msgs::PlanningScene>(
