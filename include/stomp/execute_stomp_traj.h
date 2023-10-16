@@ -24,7 +24,7 @@ class ExecuteStompTraj {
      * published by stomp
      * \param num the num-th trajectory to execute
      */
-    moveit_msgs::RobotTrajectory GetTargetStompTrajectory(int num);
+    moveit_msgs::RobotTrajectory GetTargetStompTrajectory(const int num);
 
   protected:
     /**

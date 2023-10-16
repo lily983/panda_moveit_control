@@ -20,7 +20,7 @@ void ExecuteStompTraj::CallbackStompTraj(
 }
 
 moveit_msgs::RobotTrajectory ExecuteStompTraj::GetTargetStompTrajectory(
-    int num) {
+    const int num) {
     if (all_stomp_trajectory_.trajectory.size() == 0) {
         ROS_ERROR("!!!Haven't received any stomp trajectory!!!");
     }
