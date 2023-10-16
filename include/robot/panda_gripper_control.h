@@ -9,9 +9,12 @@
  *
  * \param width target width between fingers
  * \param speed speed of the finger movement
- * \return return true if fingers move to the target width within the defined
- * time duration
+ * \param timeout_duration time duration of waitting for the gripper action
+ * result
+ * \return return true if fingers move to the target width within the
+ * defined time duration
  */
-bool GripperMoveAction(const double width, const double speed = 0.03);
+bool GripperMoveAction(const double width, const double speed = 0.03,
+                       const double timeout_duration = 8.0);
 
 bool GripperHomingAction();
