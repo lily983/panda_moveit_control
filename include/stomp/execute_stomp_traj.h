@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/utils/data_parse.h"
+#include "include/utils/data_parser.h"
 
 #include <eigen_conversions/eigen_msg.h>
 #include <moveit_msgs/DisplayTrajectory.h>

@@ -84,7 +84,7 @@ target_link_libraries(${PROJECT_NAME}_robot ${catkin_LIBRARIES})
 add_library(${PROJECT_NAME}_execute_stomp src/stomp/execute_stomp_traj.cpp)
 target_link_libraries(${PROJECT_NAME}_execute_stomp ${catkin_LIBRARIES})
 
-add_library(${PROJECT_NAME}_utils src/utils/data_parse.cpp)
+add_library(${PROJECT_NAME}_utils src/utils/data_parser.cpp)
 target_link_libraries(${PROJECT_NAME}_utils ${catkin_LIBRARIES})
 
 # # Declare a C++ executable
