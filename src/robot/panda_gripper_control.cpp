@@ -1,10 +1,9 @@
 #include "include/robot/panda_gripper_control.h"
 
-bool GripperMoveAction(const double width, const double speed,
-                       const double timeout_duration) {
+bool GripperMoveAction(const double width, const double speed) {
     actionlib::SimpleActionClient<franka_gripper::MoveAction> move_ac(
         "/franka_gripper/move");
-    while (!move_ac.waitForServer(ros::Duration(timeout_duration))) {
+    while (!move_ac.waitForServer(ros::Duration(kActionServerTimeout))) {
         ROS_ERROR("Failed to wait for franka_gripper move server");
         return false;
     }
@@ -13,7 +12,7 @@ bool GripperMoveAction(const double width, const double speed,
     move_goal.speed = speed;
     ROS_INFO("Prepare to move gripper!");
     move_ac.sendGoal(move_goal);
-    if (move_ac.waitForResult(ros::Duration(timeout_duration))) {
+    if (move_ac.waitForResult(ros::Duration(kActionResultTimeout))) {
         ROS_INFO("Franka gripper sucessfully complish move to distance %f.",
                  width);
     } else {
