@@ -23,11 +23,8 @@ class PlanningSceneOperation {
      * from current state to pre-grasp pose
      *
      * \param traj trajectory message
-     * \param max_num_attempt max number of trail to wait for subscriber,
-     * functioning as timeout
      */
-    void VisualizeTrajectory(const moveit_msgs::DisplayTrajectory& traj,
-                             const int max_num_attempt = 5);
+    void VisualizeTrajectory(const moveit_msgs::DisplayTrajectory& traj);
 
   protected:
     /**

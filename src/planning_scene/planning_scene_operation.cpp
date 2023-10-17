@@ -96,18 +96,19 @@ void PlanningSceneOperation::RemoveCollisionMesh(
 }
 
 void PlanningSceneOperation::VisualizeTrajectory(
-    const moveit_msgs::DisplayTrajectory& traj, const int max_num_attempt) {
-    int16_t trail = 0;
+    const moveit_msgs::DisplayTrajectory& traj) {
+    unsigned int max_num_attempt = 5;
+    unsigned int trial = 0;
     while (pub_trajectory_.getNumSubscribers() != 0 &&
-           trail < max_num_attempt) {
+           trial < max_num_attempt) {
         ROS_WARN(
             "No subscriber to visualize trajectory, check if Rviz subscribe "
             "the "
             "topic visualize_trajectory...");
         ros::Duration(1.0).sleep();
-        trail += 1;
+        trial += 1;
     }
-    if (trail < max_num_attempt) {
+    if (trial < max_num_attempt) {
         pub_trajectory_.publish(traj);
         ROS_INFO("Published trajectory to Rviz for visualization");
     } else {
