@@ -1,5 +1,4 @@
 # Stomp publishes moveit_msgs::DisplayTrajectory, this service display the n-th trajectory in the msg named as stomp_traj_name
 int16 nth_traj
-string stomp_traj_name
 ---
 bool success
