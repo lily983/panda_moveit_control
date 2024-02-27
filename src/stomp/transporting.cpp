@@ -1,16 +1,16 @@
-#include "include/stomp/scooping.h"
+#include "include/stomp/transporting.h"
 
-Scooping::Scooping(ros::NodeHandle& n) : ExecuteStompTraj(n) {
-    ROS_INFO("[Scooping]: finished initialization!");
+Transporting::Transporting(ros::NodeHandle& n) : ExecuteStompTraj(n) {
+    ROS_INFO("[Transporting]: finished initialization!===");
 }
 
-Scooping::~Scooping() {}
+Transporting::~Transporting() {}
 
-bool Scooping::CallbackExecuteStompTraj(
+bool Transporting::CallbackExecuteStompTraj(
     panda_moveit_control::ExecuteStompTraj::Request& req,
     panda_moveit_control::ExecuteStompTraj::Response& res) {
     ROS_INFO(
-        "===Received request to execute STOMP trajectory for the scooping "
+        "===Received request to execute STOMP trajectory for the transporting "
         "task!===");
     if (all_stomp_trajectory_.trajectory.size() == 0) {
         ROS_ERROR("Haven't received STOMP trajectroy ");
@@ -22,8 +22,8 @@ bool Scooping::CallbackExecuteStompTraj(
     stomp_first_point = stomp_trajectory_.joint_trajectory.points.at(0);
 
     ROS_INFO("===Add collision scene and object to the planning scene===");
-    planning_scene_.AddCollisionObj(1);
-    planning_scene_.AddCollisionObj(0);
+    planning_scene_.AddCollisionMesh("mesh_scene");
+    planning_scene_.AddCollisionMesh("mesh_obj");
 
     ROS_INFO("===Move to the first joint configuration!!!===");
     ros::Duration(1.0).sleep();
@@ -35,13 +35,13 @@ bool Scooping::CallbackExecuteStompTraj(
 
     ROS_INFO(
         "===Reached to the start joint configuration. Please handover the "
-        "spoon!===");
+        "test object!===");
     ros::Duration(5.0).sleep();
-    if (GripperMoveAction(0.008, 0.01) == false) {
+    if (GripperMoveAction(0.008, 0.05) == false) {
         ROS_WARN("===Franka gripper failed to execute move command!===");
     }
     ROS_INFO("===Ready to execute STOMP trajectory! Please leave the arm!===");
-    ros::Duration(5.0).sleep();
+    ros::Duration(1.0).sleep();
 
     if (panda_arm_.ExecuteTrajectory(stomp_trajectory_) == false) {
         ROS_ERROR("===Failed to execute STOMP trajectory!===");
@@ -49,7 +49,8 @@ bool Scooping::CallbackExecuteStompTraj(
         return false;
     }
 
-    ROS_INFO("===Finished executing STOMP trajectory for the pouring task!===");
+    ROS_INFO(
+        "===Finished executing STOMP trajectory for the transporting task!===");
     res.success = true;
     return true;
 }

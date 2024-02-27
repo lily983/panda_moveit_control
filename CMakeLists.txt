@@ -30,8 +30,6 @@ find_package(catkin REQUIRED COMPONENTS
 # # Generate services in the 'srv' folder
 add_service_files(
   FILES
-  PandaGraspHandle.srv
-  GraspHandleInfo.srv
   DisplayStompTraj.srv
   ExecuteStompTraj.srv
   VisualizeStompTraj.srv
@@ -81,28 +79,26 @@ target_link_libraries(${PROJECT_NAME}_planning_scene_operation ${catkin_LIBRARIE
 add_library(${PROJECT_NAME}_robot src/robot/panda_arm_planning_control.cpp src/robot/panda_gripper_control.cpp)
 target_link_libraries(${PROJECT_NAME}_robot ${catkin_LIBRARIES})
 
-add_library(${PROJECT_NAME}_execute_stomp src/stomp/execute_stomp_traj.cpp)
-target_link_libraries(${PROJECT_NAME}_execute_stomp ${catkin_LIBRARIES})
+add_library(${PROJECT_NAME}_execute_stomp src/stomp/execute_stomp_traj.cpp 
+                                          src/stomp/scooping.cpp
+                                          src/stomp/transporting.cpp
+                                          src/stomp/pouring.cpp
+                                          src/stomp/opening.cpp)
+target_link_libraries(${PROJECT_NAME}_execute_stomp ${catkin_LIBRARIES}
+                                                    ${PROJECT_NAME}_robot
+                                                    ${PROJECT_NAME}_planning_scene_operation)
 
 add_library(${PROJECT_NAME}_utils src/utils/data_parser.cpp)
 target_link_libraries(${PROJECT_NAME}_utils ${catkin_LIBRARIES})
 
 # # Declare a C++ executable
-add_executable(panda_grasp_handle_server src/panda_grasp_handle_server.cpp)
-target_link_libraries(panda_grasp_handle_server ${PROJECT_NAME}_robot
-                                                ${PROJECT_NAME}_utils)
-
 add_executable(operate_planning_scene src/operate_planning_scene.cpp)
 target_link_libraries(operate_planning_scene ${PROJECT_NAME}_robot
                                              ${PROJECT_NAME}_planning_scene_operation
                                              ${PROJECT_NAME}_utils)
 
-add_executable(test_panda_class src/test_panda_class.cpp)
-target_link_libraries(test_panda_class ${PROJECT_NAME}_robot
-                                       ${PROJECT_NAME}_utils)
-
-add_executable(scooping src/scooping.cpp)
-target_link_libraries(scooping ${PROJECT_NAME}_robot
-                               ${PROJECT_NAME}_planning_scene_operation
-                               ${PROJECT_NAME}_execute_stomp
-                               ${PROJECT_NAME}_utils)
+add_executable(stomp_execution src/stomp_execution.cpp)
+target_link_libraries(stomp_execution ${PROJECT_NAME}_robot
+                                      ${PROJECT_NAME}_planning_scene_operation
+                                      ${PROJECT_NAME}_execute_stomp
+                                      ${PROJECT_NAME}_utils)

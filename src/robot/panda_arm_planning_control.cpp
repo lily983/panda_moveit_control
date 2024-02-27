@@ -125,7 +125,9 @@ bool PandaArmPlanningControl::ExecuteTrajectory(
     } else {
         ROS_ERROR("Failed to execute robot trajectory!");
         status = false;
+        return status;
     }
+    move_group_.setStartState(*move_group_.getCurrentState());
     return status;
 }
 

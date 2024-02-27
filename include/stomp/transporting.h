@@ -8,5 +8,5 @@ class Transporting : public ExecuteStompTraj {
   protected:
     bool CallbackExecuteStompTraj(
         panda_moveit_control::ExecuteStompTraj::Request& req,
-        panda_moveit_control::ExecuteStompTraj::Response& res);
+        panda_moveit_control::ExecuteStompTraj::Response& res) override;
 };

@@ -1,16 +1,16 @@
-#include "include/stomp/pouring.h"
+#include "include/stomp/scooping.h"
 
-Pouring::Pouring(ros::NodeHandle& n) : ExecuteStompTraj(n) {
-    ROS_INFO("===[Pouring]: finished initialization!===");
+Scooping::Scooping(ros::NodeHandle& n) : ExecuteStompTraj(n) {
+    ROS_INFO("[Scooping]: finished initialization!");
 }
 
-Pouring::~Pouring() {}
+Scooping::~Scooping() {}
 
-bool Pouring::CallbackExecuteStompTraj(
+bool Scooping::CallbackExecuteStompTraj(
     panda_moveit_control::ExecuteStompTraj::Request& req,
     panda_moveit_control::ExecuteStompTraj::Response& res) {
     ROS_INFO(
-        "===Received request to execute STOMP trajectory for the pouring "
+        "===Received request to execute STOMP trajectory for the scooping "
         "task!===");
     if (all_stomp_trajectory_.trajectory.size() == 0) {
         ROS_ERROR("Haven't received STOMP trajectroy ");
@@ -22,8 +22,8 @@ bool Pouring::CallbackExecuteStompTraj(
     stomp_first_point = stomp_trajectory_.joint_trajectory.points.at(0);
 
     ROS_INFO("===Add collision scene and object to the planning scene===");
-    planning_scene_.AddCollisionObj(1);
-    planning_scene_.AddCollisionObj(0);
+    planning_scene_.AddCollisionMesh("mesh_obj");
+    planning_scene_.AddCollisionMesh("mesh_scene");
 
     ROS_INFO("===Move to the first joint configuration!!!===");
     ros::Duration(1.0).sleep();
@@ -35,13 +35,13 @@ bool Pouring::CallbackExecuteStompTraj(
 
     ROS_INFO(
         "===Reached to the start joint configuration. Please handover the "
-        "pouring tool!===");
+        "spoon!===");
     ros::Duration(5.0).sleep();
-    if (GripperMoveAction(0.055, 0.01) == false) {
+    if (GripperMoveAction(0.008, 0.05) == false) {
         ROS_WARN("===Franka gripper failed to execute move command!===");
     }
     ROS_INFO("===Ready to execute STOMP trajectory! Please leave the arm!===");
-    ros::Duration(5.0).sleep();
+    ros::Duration(1.0).sleep();
 
     if (panda_arm_.ExecuteTrajectory(stomp_trajectory_) == false) {
         ROS_ERROR("===Failed to execute STOMP trajectory!===");

@@ -26,7 +26,6 @@ class PlanningSceneOperation {
      */
     void VisualizeTrajectory(const moveit_msgs::DisplayTrajectory& traj);
 
-  protected:
     /**
      * \brief Remove the mesh-formatted collision object from the planning scene
      *
@@ -81,6 +80,7 @@ class PlanningSceneOperation {
     ros::NodeHandle nh_;
     moveit_visual_tools::MoveItVisualTools moveit_visual_tools_;
     ros::Publisher pub_planning_scene_;
+    ros::Publisher pub_planning_scene_2_;
     ros::Publisher pub_trajectory_;
     ros::ServiceServer srv_visualize_stomp_trajectory_;
     ros::ServiceServer srv_add_collision_mesh_;

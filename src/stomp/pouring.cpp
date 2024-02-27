@@ -1,16 +1,16 @@
-#include "include/stomp/transporting.h"
+#include "include/stomp/pouring.h"
 
-Transporting::Transporting(ros::NodeHandle& n) : ExecuteStompTraj(n) {
-    ROS_INFO("===[Transporting]: finished initialization!===");
+Pouring::Pouring(ros::NodeHandle& n) : ExecuteStompTraj(n) {
+    ROS_INFO("[Pouring]: finished initialization!===");
 }
 
-Transporting::~Transporting() {}
+Pouring::~Pouring() {}
 
-bool Transporting::CallbackExecuteStompTraj(
+bool Pouring::CallbackExecuteStompTraj(
     panda_moveit_control::ExecuteStompTraj::Request& req,
     panda_moveit_control::ExecuteStompTraj::Response& res) {
     ROS_INFO(
-        "===Received request to execute STOMP trajectory for the transporting "
+        "===Received request to execute STOMP trajectory for the pouring "
         "task!===");
     if (all_stomp_trajectory_.trajectory.size() == 0) {
         ROS_ERROR("Haven't received STOMP trajectroy ");
@@ -22,8 +22,8 @@ bool Transporting::CallbackExecuteStompTraj(
     stomp_first_point = stomp_trajectory_.joint_trajectory.points.at(0);
 
     ROS_INFO("===Add collision scene and object to the planning scene===");
-    planning_scene_.AddCollisionObj(1);
-    planning_scene_.AddCollisionObj(0);
+    planning_scene_.AddCollisionMesh("mesh_scene");
+    planning_scene_.AddCollisionMesh("mesh_obj");
 
     ROS_INFO("===Move to the first joint configuration!!!===");
     ros::Duration(1.0).sleep();
@@ -33,9 +33,15 @@ bool Transporting::CallbackExecuteStompTraj(
         return false;
     }
 
-    ROS_INFO("===Reached to the start joint configuration!===");
+    ROS_INFO(
+        "===Reached to the start joint configuration. Please handover the "
+        "pouring tool!===");
+    ros::Duration(5.0).sleep();
+    if (GripperMoveAction(0.055, 0.01) == false) {
+        ROS_WARN("===Franka gripper failed to execute move command!===");
+    }
     ROS_INFO("===Ready to execute STOMP trajectory! Please leave the arm!===");
-    ros::Duration(2.0).sleep();
+    ros::Duration(1.0).sleep();
 
     if (panda_arm_.ExecuteTrajectory(stomp_trajectory_) == false) {
         ROS_ERROR("===Failed to execute STOMP trajectory!===");
@@ -43,8 +49,7 @@ bool Transporting::CallbackExecuteStompTraj(
         return false;
     }
 
-    ROS_INFO(
-        "===Finished executing STOMP trajectory for the transporting task!===");
+    ROS_INFO("===Finished executing STOMP trajectory for the pouring task!===");
     res.success = true;
     return true;
 }
