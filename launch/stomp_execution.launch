@@ -1,0 +1,23 @@
+<launch>
+    <arg name="data_dir" default="/home/xiaoli/Dropbox/primp_exp/imagination" />
+    <arg name="motion_primitive" default="pouring"/>
+    <arg name="object" default="red_laddle"/>
+    <arg name="stomp_trajectory_topic" default="/move_group/display_planned_path" />
+    <!-- mode (for opening tasks): rotating_left, rotating_down, sliding -->
+    <arg name="mode" default="rotating_left" />
+    <arg name="rotation_axis_distance" default="0.18" />
+    <arg name="rotation_angle" default="60" />
+    <arg name="sliding_distance" default="0.13" />
+
+    <param name="rotation_axis_distance" type="double" value="$(arg rotation_axis_distance)" />
+    <param name="rotation_angle" type="double" value="$(arg rotation_angle)" />
+    <param name="sliding_distance" type="double" value="$(arg sliding_distance)" />
+
+    <include file="$(find panda_moveit_control)/launch/operate_planning_scene.launch" >
+        <arg name="object" value="$(arg object)"/>
+        <arg name="motion_primitive" value="$(arg motion_primitive)"/>
+        <arg name="stomp_trajectory_topic" value="$(arg stomp_trajectory_topic)" />
+    </include>
+
+    <node name="stomp_execution" pkg="panda_moveit_control" type="stomp_execution" output="screen" />
+</launch>
