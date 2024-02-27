@@ -16,7 +16,10 @@ PlanningSceneOperation::PlanningSceneOperation(ros::NodeHandle& nh)
         publish_stomp_trajectory_topic, 1);
 
     // Operate planning scene
-    pub_planning_scene_ = nh_.advertise<moveit_msgs::PlanningScene>(
+    pub_planning_scene_ =
+        nh_.advertise<moveit_msgs::PlanningScene>("/planning_scene", 1, true);
+
+    pub_planning_scene_2_ = nh_.advertise<moveit_msgs::PlanningScene>(
         "/move_group/monitored_planning_scene", 1, true);
 
     // Setup service
@@ -76,6 +79,7 @@ void PlanningSceneOperation::AddCollisionMesh(const std::string& obj_name,
 
     planning_scene.is_diff = true;
     pub_planning_scene_.publish(planning_scene);
+    pub_planning_scene_2_.publish(planning_scene);
 
     ROS_INFO("Publish collision object %s to planning scene", obj_name.c_str());
 }
@@ -92,6 +96,7 @@ void PlanningSceneOperation::RemoveCollisionMesh(
     planning_scene.world.collision_objects.clear();
     planning_scene.world.collision_objects.push_back(remove_object);
     pub_planning_scene_.publish(planning_scene);
+    pub_planning_scene_2_.publish(planning_scene);
     ROS_INFO("Remove collision object %s in planning scene", obj_name.c_str());
 }
 
