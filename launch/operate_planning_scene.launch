@@ -1,10 +1,10 @@
 <launch>
 
     <!-- The folder path where the mesh file exist -->
-    <arg name="web_mesh_path"/>
+    <arg name="web_mesh_path" default="/home/xiaoli/Dropbox/primp_exp/imagination" />
     <arg name="motion_primitive" default="scooping" />
     <arg name="object" default="red_bowl_1"/>
-    <arg name="stomp_trajectory_topic" default="/server_stomp_planning/display_planned_path" />
+    <arg name="stomp_trajectory_topic" default="/move_group/display_planned_path" />
 
     <!-- Modify the web_mesh_scene and web_mesh_object based on your naming convention -->
     <param name="web_mesh_scene" value="$(arg web_mesh_path)/$(arg motion_primitive)/$(arg object)/perception_0/mesh_scene.obj" type="string"/>
@@ -15,7 +15,7 @@
     <param name="motion_primitive" value="$(arg motion_primitive)" type="string" />
     <param name="object" value="$(arg object)" type="string" />
 
-    <param name="stomp_trajectory_topic" value="/server_stomp_planning/display_planned_path" type="string" />
+    <param name="stomp_trajectory_topic" value="$(arg stomp_trajectory_topic)" type="string" />
     <param name="publish_stomp_trajectory_topic" value="/visualize_stomp_trajectory" type="string" />
 
     <node name="operate_planning_scene" pkg="panda_moveit_control" type="operate_planning_scene" output="screen" />
