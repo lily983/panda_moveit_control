@@ -30,8 +30,6 @@ int main(int argc, char** argv) {
     CopyMeshFromWebToRepo(web_mesh_scene, repo_mesh_scene);
     CopyMeshFromWebToRepo(web_mesh_object, repo_mesh_object);
 
-    PlanningSceneOperation planning_scene_operation(nh);
-
     ros::waitForShutdown();
     return 0;
 }
