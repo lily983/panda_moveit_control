@@ -145,7 +145,8 @@ void Opening::GenerateGraspPose(
             0, 0, 0, 1;
 
         ei_marker_to_postgrasp =
-            Eigen::Translation3d(Eigen::Vector3d(0.0, 0.0, 0.083)) *
+            Eigen::Translation3d(
+                Eigen::Vector3d(0.0, sliding_distance_, 0.083)) *
             quat_marker_to_grasp.normalized().toRotationMatrix();
     }
 
